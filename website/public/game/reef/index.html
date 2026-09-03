@@ -1,0 +1,1068 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Coral Dragon Reef Rescue</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:100%;height:100%;overflow:hidden;background:#001830;font-family:system-ui,sans-serif}
+#game-container{position:relative;width:100%;height:100%;display:flex;align-items:center;justify-content:center}
+canvas{display:block;background:#001830}
+#hud{position:absolute;top:0;left:0;right:0;padding:8px 16px;display:none;flex-wrap:wrap;gap:6px 18px;align-items:center;justify-content:space-between;background:linear-gradient(180deg,rgba(0,15,40,.85) 0%,transparent 100%);z-index:10;font-size:14px;color:#c8e6ff}
+#hud .left,#hud .right{display:flex;align-items:center;gap:10px}
+.hud-label{font-weight:700;text-transform:uppercase;letter-spacing:.5px;font-size:11px;color:#7ab8e0}
+.hud-val{font-size:16px;font-weight:700;color:#fff}
+#hp-bar{display:flex;gap:4px}
+.hp-seg{width:28px;height:14px;border-radius:3px;background:#300;transition:background .15s,box-shadow .15s}
+.hp-seg.lit{background:#0f0;box-shadow:0 0 6px #0f0}
+.hp-seg.lit.mid{background:#ff0;box-shadow:0 0 6px #ff0}
+.hp-seg.lit.low{background:#f00;box-shadow:0 0 6px #f00}
+#restart-btn{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.3);color:#c8e6ff;padding:4px 12px;border-radius:4px;cursor:pointer;font-size:12px;font-weight:700}
+#restart-btn:hover{background:rgba(255,255,255,.25)}
+.overlay{position:absolute;top:0;left:0;right:0;bottom:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(0,10,30,.88);z-index:20;color:#c8e6ff;text-align:center;padding:20px}
+.overlay h1{font-size:32px;color:#4de8c4;margin-bottom:8px;text-shadow:0 0 20px #0fa}
+.overlay h2{font-size:22px;margin-bottom:12px;color:#ffd}
+.overlay p{font-size:14px;line-height:1.6;max-width:500px;margin-bottom:8px}
+.overlay .controls{display:flex;gap:20px;margin:12px 0;font-size:13px}
+.overlay .controls div{background:rgba(255,255,255,.06);padding:8px 14px;border-radius:6px}
+.overlay .controls kbd{display:inline-block;background:rgba(255,255,255,.15);padding:2px 6px;border-radius:3px;font-family:monospace;margin:1px}
+.btn{display:inline-block;padding:12px 32px;border-radius:8px;font-size:16px;font-weight:700;cursor:pointer;border:none;margin-top:12px;transition:transform .1s,box-shadow .1s}
+.btn-primary{background:linear-gradient(135deg,#0fa,#0af);color:#022;box-shadow:0 0 20px rgba(0,255,170,.3)}
+.btn-primary:hover{transform:scale(1.05);box-shadow:0 0 30px rgba(0,255,170,.5)}
+.btn-secondary{background:linear-gradient(135deg,#a8f,#a0f);color:#fff;box-shadow:0 0 20px rgba(170,100,255,.3)}
+.btn-secondary:hover{transform:scale(1.05)}
+#mobile-controls{position:absolute;bottom:0;left:0;right:0;height:140px;display:none;z-index:15;pointer-events:none}
+.touch-zone{position:absolute;bottom:10px;width:90px;height:90px;border-radius:50%;background:rgba(255,255,255,.08);border:2px solid rgba(255,255,255,.2);pointer-events:auto;display:flex;align-items:center;justify-content:center;font-size:24px;color:rgba(255,255,255,.4)}
+.touch-zone:active{background:rgba(255,255,255,.2)}
+#dpad-up{left:60px;bottom:110px}
+#dpad-down{left:60px}
+#dpad-left{left:10px;bottom:60px}
+#dpad-right{left:110px;bottom:60px}
+#action-btn{right:10px;background:rgba(0,255,170,.1);border-color:rgba(0,255,170,.3)}
+#pause-btn{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.3);color:#c8e6ff;padding:4px 10px;border-radius:4px;cursor:pointer;font-size:12px}
+.hidden{display:none!important}
+</style>
+</head>
+<body>
+<div id="game-container">
+<canvas id="game"></canvas>
+<div id="hud">
+<div class="left">
+<div><span class="hud-label">Eggs</span><br><span class="hud-val" id="hud-eggs">0/8</span></div>
+<div><span class="hud-label">Polyps</span><br><span class="hud-val" id="hud-polyps">0/5</span></div>
+<div><span class="hud-label">Lives</span><br><span class="hud-val" id="hud-lives">3</span></div>
+<div id="hp-bar"><div class="hp-seg lit" id="hp1"></div><div class="hp-seg lit" id="hp2"></div><div class="hp-seg lit" id="hp3"></div></div>
+</div>
+<div class="right">
+<div><span class="hud-label">Score</span><br><span class="hud-val" id="hud-score">0</span></div>
+<button id="pause-btn">⏸ Pause</button>
+<button id="restart-btn">↻ Restart</button>
+</div>
+</div>
+<div id="start-screen" class="overlay">
+<h1>🐉 Coral Dragon Reef Rescue</h1>
+<p>Rescue the reef! Collect <strong>8 glowing reef eggs</strong> and heal <strong>5 damaged coral polyps</strong> while avoiding purple wardens and environmental hazards.</p>
+<div class="controls">
+<div>Move<br><kbd>↑</kbd><kbd>↓</kbd><kbd>←</kbd><kbd>→</kbd> or <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd></div>
+<div>Mobile<br>Touch controls at bottom</div>
+</div>
+<p style="font-size:12px;color:#7ab8e0">Audio activates on start. Click/tap anywhere to begin.</p>
+<button class="btn btn-primary" id="start-btn">Start Rescue</button>
+</div>
+<div id="pause-screen" class="overlay hidden">
+<h2>⏸ Paused</h2>
+<button class="btn btn-primary" id="resume-btn">Resume</button>
+<button class="btn btn-secondary" id="pause-restart-btn">Restart</button>
+</div>
+<div id="win-screen" class="overlay hidden">
+<h1>🎉 Reef Rescued!</h1>
+<h2 id="win-stats"></h2>
+<p>You saved the reef! All eggs are safe and the coral is healed.</p>
+<button class="btn btn-primary" id="win-restart-btn">Play Again</button>
+</div>
+<div id="lose-screen" class="overlay hidden">
+<h1>💀 Reef Lost</h1>
+<h2 id="lose-stats"></h2>
+<p>The wardens overwhelmed you. Try again!</p>
+<button class="btn btn-secondary" id="lose-restart-btn">Try Again</button>
+</div>
+<div id="mobile-controls">
+<div class="touch-zone" id="dpad-up">▲</div>
+<div class="touch-zone" id="dpad-down">▼</div>
+<div class="touch-zone" id="dpad-left">◀</div>
+<div class="touch-zone" id="dpad-right">▶</div>
+<div class="touch-zone" id="action-btn">✋</div>
+</div>
+</div>
+<script>
+(function(){
+"use strict";
+
+// ═══════════════════════════════════════════════════════════
+// CORAL DRAGON REEF RESCUE
+// A self-contained browser game. No external assets or libraries.
+// ═══════════════════════════════════════════════════════════
+
+// ─── Canvas Setup ───
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
+let W, H;
+
+function resize() {
+  const container = document.getElementById("game-container");
+  const cw = container.clientWidth;
+  const ch = container.clientHeight;
+  let w, h;
+  if (cw / ch > 16 / 9) { h = ch; w = h * 16 / 9; }
+  else { w = cw; h = w * 9 / 16; }
+  canvas.width = Math.floor(w);
+  canvas.height = Math.floor(h);
+  W = canvas.width; H = canvas.height;
+}
+window.addEventListener("resize", resize);
+resize();
+
+// ─── Audio (Web Audio, initialized only after user interaction) ───
+let audioCtx = null;
+let audioEnabled = false;
+
+function initAudio() {
+  if (audioCtx) return;
+  try {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    audioEnabled = true;
+  } catch(e) { audioEnabled = false; }
+}
+
+function playTone(freq, dur, type, vol) {
+  if (!audioEnabled || !audioCtx) return;
+  try {
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = type || "sine";
+    osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+    gain.gain.setValueAtTime(vol || 0.15, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + dur);
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start();
+    osc.stop(audioCtx.currentTime + dur);
+  } catch(e) {}
+}
+
+function sfxCollect() { playTone(880, 0.15, "sine", 0.2); setTimeout(()=>playTone(1100, 0.1, "sine", 0.15), 80); }
+function sfxHeal()    { playTone(440, 0.3, "triangle", 0.15); setTimeout(()=>playTone(660, 0.2, "triangle", 0.12), 100); setTimeout(()=>playTone(880, 0.15, "triangle", 0.1), 200); }
+function sfxHit()     { playTone(150, 0.3, "sawtooth", 0.2); }
+function sfxWin()     { [0,100,200,300,400].forEach((d,i)=>setTimeout(()=>playTone(440+i*110,0.2,"sine",0.15),d)); }
+function sfxLose()    { [0,150,300].forEach((d,i)=>setTimeout(()=>playTone(300-i*80,0.3,"sawtooth",0.12),d)); }
+
+// ─── Utility ───
+function rand(a,b){return Math.random()*(b-a)+a}
+function randInt(a,b){return Math.floor(rand(a,b+1))}
+function dist(a,b){return Math.hypot(a.x-b.x,a.y-b.y)}
+function clamp(v,mn,mx){return Math.max(mn,Math.min(mx,v))}
+
+// ─── Constants (defined first so state can reference them) ───
+const MAX_LIVES = 3;
+const MAX_HP_SEGS = 3;
+const MAX_EGGS = 8;
+const MAX_POLYPS = 5;
+const PLAYER_SPEED = 280;
+const PLAYER_RADIUS = 18;
+const EGG_RADIUS = 12;
+const POLYP_RADIUS = 22;
+const WARDEN_RADIUS = 20;
+const WARDEN_SPEED_BASE = 100;
+const HAZARD_RADIUS = 10;
+const HAZARD_SPEED = 150;
+const HEAL_PROXIMITY = 45;
+const HEAL_DURATION = 1.5;
+const INVULN_DURATION = 1.5;
+const SPAWN_EGG_INTERVAL = 6;
+const SPAWN_WARDEN_INTERVAL = 8;
+const SPAWN_HAZARD_INTERVAL = 4;
+
+// ─── Game State ───
+const STATE = { MENU:0, PLAYING:1, PAUSED:2, WIN:3, LOSE:4 };
+let gameState = STATE.MENU;
+let lastTime = 0;
+let elapsed = 0;
+let score = 0;
+
+// Player
+let player = {};
+// Eggs
+let eggs = [];
+let eggsCollected = 0;
+let eggsSpawned = 0;
+let eggsSpawnTimer = 0;
+// Polyps
+let polyps = [];
+let polypsHealed = 0;
+// Wardens
+let wardens = [];
+let wardenSpawnTimer = 0;
+// Hazards
+let hazards = [];
+let hazardSpawnTimer = 0;
+// Particles
+let particles = [];
+// Invulnerability
+let invulnTimer = 0;
+let invulnFlash = 0;
+// Screen shake
+let shakeTimer = 0;
+let shakeIntensity = 0;
+// Near completion
+let nearComplete = false;
+// Lives (synchronized with HP bar segments)
+let lives = MAX_LIVES;
+
+// Input
+const keys = {};
+let touchUp = false;
+let touchDown = false;
+let touchLeft = false;
+let touchRight = false;
+let touchAction = false;
+
+// ─── Spawn Helpers ───
+function getPlayBounds() {
+  return { x: 0, y: 0, w: W, h: H };
+}
+
+function spawnEgg() {
+  const b = getPlayBounds();
+  const margin = 40;
+  const egg = {
+    x: rand(margin, b.w - margin),
+    y: rand(margin + 40, b.h - margin),
+    r: EGG_RADIUS,
+    collected: false,
+    active: true,
+    bobPhase: rand(0, Math.PI * 2),
+    glowPhase: rand(0, Math.PI * 2),
+    age: 0
+  };
+  eggs.push(egg);
+  eggsSpawned++;
+}
+
+function spawnPolyp() {
+  const b = getPlayBounds();
+  const margin = 50;
+  const polyp = {
+    x: rand(margin, b.w - margin),
+    y: rand(margin + 60, b.h - margin),
+    r: POLYP_RADIUS,
+    damaged: true,
+    healed: false,
+    healProgress: 0,
+    pulsePhase: rand(0, Math.PI * 2),
+    color: `hsl(${randInt(0,30)}, ${randInt(60,90)}%, ${randInt(40,60)}%)`
+  };
+  polyps.push(polyp);
+}
+
+function spawnWarden() {
+  const b = getPlayBounds();
+  const side = randInt(0, 3);
+  let x, y, vx, vy;
+  const speed = WARDEN_SPEED_BASE + elapsed * 2;
+  if (side === 0) { x = -WARDEN_RADIUS; y = rand(0, b.h); vx = speed; vy = rand(-60, 60); }
+  else if (side === 1) { x = b.w + WARDEN_RADIUS; y = rand(0, b.h); vx = -speed; vy = rand(-60, 60); }
+  else if (side === 2) { x = rand(0, b.w); y = -WARDEN_RADIUS; vx = rand(-60, 60); vy = speed; }
+  else { x = rand(0, b.w); y = b.h + WARDEN_RADIUS; vx = rand(-60, 60); vy = -speed; }
+  wardens.push({ x, y, vx, vy, r: WARDEN_RADIUS, phase: rand(0, Math.PI*2) });
+}
+
+function spawnHazard() {
+  const b = getPlayBounds();
+  const x = rand(20, b.w - 20);
+  const y = rand(20, b.h - 20);
+  hazards.push({
+    x, y, r: HAZARD_RADIUS,
+    vx: rand(-HAZARD_SPEED, HAZARD_SPEED) * 0.5,
+    vy: rand(-HAZARD_SPEED, HAZARD_SPEED) * 0.5,
+    life: 6,
+    pulse: rand(0, Math.PI * 2)
+  });
+}
+
+// ─── Reset Path (unified) ───
+// All restart sources (Try Again, Play Again, HUD Restart) call this same function.
+function fullReset() {
+  // Clear all arrays to remove stale entities
+  eggs = [];
+  polyps = [];
+  wardens = [];
+  hazards = [];
+  particles = [];
+
+  // Reset counters
+  eggsCollected = 0;
+  eggsSpawned = 0;
+  eggsSpawnTimer = 0;
+  polypsHealed = 0;
+  wardenSpawnTimer = 0;
+  hazardSpawnTimer = 0;
+  score = 0;
+  elapsed = 0;
+  nearComplete = false;
+  lives = MAX_LIVES;
+
+  // Reset player position/velocity
+  player = {
+    x: W / 2,
+    y: H / 2,
+    vx: 0,
+    vy: 0,
+    r: PLAYER_RADIUS,
+    facing: 1,
+    wingPhase: 0,
+    trail: []
+  };
+
+  // Reset invulnerability and effects
+  invulnTimer = 0;
+  invulnFlash = 0;
+  shakeTimer = 0;
+  shakeIntensity = 0;
+
+  // Reset animation timestamps
+  causticTime = 0;
+  bubbleTimer = 0;
+
+  // Reset win/loss flags via state
+  gameState = STATE.PLAYING;
+
+  // Hide overlays, show HUD
+  document.getElementById("start-screen").classList.add("hidden");
+  document.getElementById("pause-screen").classList.add("hidden");
+  document.getElementById("win-screen").classList.add("hidden");
+  document.getElementById("lose-screen").classList.add("hidden");
+  document.getElementById("hud").style.display = "flex";
+
+  // Spawn initial eggs (3 at start, rest progressive)
+  // INVARIANT: Exactly 8 eggs must be collectible in a normal run.
+  // We spawn 3 at start, then progressively spawn more every
+  // SPAWN_EGG_INTERVAL seconds as long as eggsCollected < 8.
+  // Each egg spawns within bounds (reachable). No array-length cap
+  // or unreachable coordinates can block later eggs.
+  for (let i = 0; i < 3; i++) spawnEgg();
+  // Spawn all 5 polyps early
+  for (let i = 0; i < MAX_POLYPS; i++) spawnPolyp();
+
+  updateHUD();
+}
+
+// ─── HUD Update ───
+function updateHUD() {
+  document.getElementById("hud-eggs").textContent = eggsCollected + "/" + MAX_EGGS;
+  document.getElementById("hud-polyps").textContent = polypsHealed + "/" + MAX_POLYPS;
+  document.getElementById("hud-lives").textContent = lives;
+
+  const segs = document.querySelectorAll(".hp-seg");
+  segs.forEach((seg, i) => {
+    if (i < lives) {
+      seg.classList.add("lit");
+      seg.classList.remove("mid", "low");
+      if (lives === 2) seg.classList.add("mid");
+      if (lives === 1) seg.classList.add("low");
+    } else {
+      seg.classList.remove("lit", "mid", "low");
+    }
+  });
+
+  document.getElementById("hud-score").textContent = score;
+}
+
+function takeDamage() {
+  // SYNCHRONIZED HP UPDATE: a real collision immediately decrements the
+  // lives counter AND extinguishes exactly one HP bar segment.
+  // 3 lives / 3 lit segments → 2 lives / 2 lit segments.
+  if (invulnTimer > 0) return;
+  lives--;
+  invulnTimer = INVULN_DURATION;
+  invulnFlash = 0.3;
+  shakeTimer = 0.3;
+  shakeIntensity = 8;
+  sfxHit();
+
+  // Flash player red
+  for (let i = 0; i < 10; i++) {
+    particles.push({
+      x: player.x, y: player.y,
+      vx: rand(-100, 100), vy: rand(-100, 100),
+      life: 0.5, maxLife: 0.5,
+      color: "#f00", r: 3
+    });
+  }
+
+  updateHUD();
+
+  if (lives <= 0) {
+    lives = 0;
+    gameState = STATE.LOSE;
+    sfxLose();
+    document.getElementById("hud").style.display = "none";
+    document.getElementById("lose-screen").classList.remove("hidden");
+    document.getElementById("lose-stats").textContent = "Eggs " + eggsCollected + "/8  ·  Polyps " + polypsHealed + "/5";
+  }
+}
+
+// ─── Input ───
+window.addEventListener("keydown", e => {
+  keys[e.code] = true;
+  if (e.code === "Escape") {
+    if (gameState === STATE.PLAYING) pauseGame();
+    else if (gameState === STATE.PAUSED) resumeGame();
+  }
+});
+window.addEventListener("keyup", e => { keys[e.code] = false; });
+
+// Touch controls
+const dpadUp = document.getElementById("dpad-up");
+const dpadDown = document.getElementById("dpad-down");
+const dpadLeft = document.getElementById("dpad-left");
+const dpadRight = document.getElementById("dpad-right");
+const actionBtn = document.getElementById("action-btn");
+
+function addTouch(el, setTrue, setFalse) {
+  el.addEventListener("touchstart", e => { e.preventDefault(); setTrue(); }, {passive:false});
+  el.addEventListener("touchend", e => { e.preventDefault(); setFalse(); }, {passive:false});
+  el.addEventListener("touchcancel", e => { setFalse(); });
+}
+addTouch(dpadUp,    () => touchUp = true,    () => touchUp = false);
+addTouch(dpadDown,  () => touchDown = true,  () => touchDown = false);
+addTouch(dpadLeft,  () => touchLeft = true,  () => touchLeft = false);
+addTouch(dpadRight, () => touchRight = true, () => touchRight = false);
+addTouch(actionBtn, () => touchAction = true, () => touchAction = false);
+
+// Show mobile controls on touch devices
+function detectMobile() {
+  if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {
+    document.getElementById("mobile-controls").style.display = "block";
+  }
+}
+detectMobile();
+
+// ─── Buttons ───
+document.getElementById("start-btn").addEventListener("click", () => {
+  initAudio();
+  fullReset();
+});
+
+document.getElementById("pause-btn").addEventListener("click", () => {
+  if (gameState === STATE.PLAYING) pauseGame();
+});
+
+document.getElementById("resume-btn").addEventListener("click", resumeGame);
+document.getElementById("pause-restart-btn").addEventListener("click", fullReset);
+document.getElementById("restart-btn").addEventListener("click", fullReset);
+document.getElementById("win-restart-btn").addEventListener("click", fullReset);
+document.getElementById("lose-restart-btn").addEventListener("click", fullReset);
+
+function pauseGame() {
+  gameState = STATE.PAUSED;
+  document.getElementById("pause-screen").classList.remove("hidden");
+}
+
+function resumeGame() {
+  if (gameState !== STATE.PAUSED) return;
+  gameState = STATE.PLAYING;
+  document.getElementById("pause-screen").classList.add("hidden");
+  lastTime = performance.now();
+}
+
+// Visibility change
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden && gameState === STATE.PLAYING) pauseGame();
+});
+
+// ─── Collision ───
+function circleCollide(a, b) {
+  return dist(a, b) < a.r + b.r;
+}
+
+// ─── Update ───
+function update(dt) {
+  if (gameState !== STATE.PLAYING) return;
+
+  elapsed += dt;
+
+  // Clamp dt to avoid spiral of death
+  dt = Math.min(dt, 0.05);
+
+  // ── Player Movement ──
+  let ax = 0, ay = 0;
+  if (keys["ArrowLeft"] || keys["KeyA"] || touchLeft) ax -= 1;
+  if (keys["ArrowRight"] || keys["KeyD"] || touchRight) ax += 1;
+  if (keys["ArrowUp"] || keys["KeyW"] || touchUp) ay -= 1;
+  if (keys["ArrowDown"] || keys["KeyS"] || touchDown) ay += 1;
+
+  // Normalize diagonal
+  if (ax !== 0 && ay !== 0) {
+    ax *= 0.707;
+    ay *= 0.707;
+  }
+
+  player.vx = ax * PLAYER_SPEED;
+  player.vy = ay * PLAYER_SPEED;
+  player.x += player.vx * dt;
+  player.y += player.vy * dt;
+
+  // Clamp to bounds (reachable play area)
+  player.x = clamp(player.x, player.r, W - player.r);
+  player.y = clamp(player.y, player.r, H - player.r);
+
+  if (ax !== 0) player.facing = ax > 0 ? 1 : -1;
+
+  // Wing animation
+  player.wingPhase += dt * 8;
+
+  // Trail
+  if (ax !== 0 || ay !== 0) {
+    player.trail.push({ x: player.x, y: player.y, life: 0.3 });
+  }
+  player.trail = player.trail.filter(t => { t.life -= dt; return t.life > 0; });
+
+  // Invulnerability
+  if (invulnTimer > 0) invulnTimer -= dt;
+  if (invulnFlash > 0) invulnFlash -= dt;
+  if (shakeTimer > 0) shakeTimer -= dt;
+
+  // ── Egg Spawning (progressive) ──
+  // INVARIANT: Exactly 8 eggs must be collectible in a run.
+  // Eggs spawn progressively every SPAWN_EGG_INTERVAL seconds.
+  // The spawn loop continues as long as eggsCollected < MAX_EGGS (8).
+  // Each egg spawns within bounds (reachable). No cap on array length
+  // or unreachable coordinates can block later eggs.
+  eggsSpawnTimer += dt;
+  if (eggsSpawnTimer >= SPAWN_EGG_INTERVAL && eggsCollected < MAX_EGGS) {
+    eggsSpawnTimer = 0;
+    const activeEggs = eggs.filter(e => e.active).length;
+    if (activeEggs < 4) {
+      spawnEgg();
+    }
+  }
+
+  // ── Polyp Healing ──
+  // Healing requires sustained proximity (HEAL_DURATION seconds),
+  // not automatic at game start.
+  polyps.forEach(p => {
+    if (p.damaged && !p.healed) {
+      const d = dist(player, p);
+      if (d < HEAL_PROXIMITY) {
+        p.healProgress += dt;
+        if (p.healProgress >= HEAL_DURATION) {
+          p.healed = true;
+          p.damaged = false;
+          polypsHealed++;
+          score += 500;
+          sfxHeal();
+          for (let i = 0; i < 15; i++) {
+            particles.push({
+              x: p.x + rand(-10, 10), y: p.y + rand(-10, 10),
+              vx: rand(-50, 50), vy: rand(-80, -20),
+              life: 1, maxLife: 1, color: "#0f0", r: 4
+            });
+          }
+          updateHUD();
+        }
+      } else {
+        p.healProgress = Math.max(0, p.healProgress - dt * 2);
+      }
+    }
+  });
+
+  // ── Egg Collection ──
+  eggs.forEach(e => {
+    if (!e.active) return;
+    e.age += dt;
+    e.bobPhase += dt * 3;
+    e.glowPhase += dt * 4;
+    if (circleCollide(player, e)) {
+      e.active = false;
+      e.collected = true;
+      eggsCollected++;
+      score += 100;
+      sfxCollect();
+      for (let i = 0; i < 12; i++) {
+        particles.push({
+          x: e.x, y: e.y,
+          vx: rand(-80, 80), vy: rand(-80, 80),
+          life: 0.6, maxLife: 0.6, color: "#4df", r: 3
+        });
+      }
+      updateHUD();
+    }
+  });
+
+  // ── Warden Spawning & Movement ──
+  // Escalating challenge: wardens spawn faster and move faster over time.
+  wardenSpawnTimer += dt;
+  const wardenInterval = Math.max(3, SPAWN_WARDEN_INTERVAL - elapsed * 0.1);
+  if (wardenSpawnTimer >= wardenInterval && wardens.length < 6) {
+    wardenSpawnTimer = 0;
+    spawnWarden();
+  }
+
+  wardens.forEach(w => {
+    w.phase += dt * 3;
+    w.x += w.vx * dt;
+    w.y += w.vy * dt;
+    if (w.x < w.r || w.x > W - w.r) w.vx *= -1;
+    if (w.y < w.r || w.y > H - w.r) w.vy *= -1;
+    w.x = clamp(w.x, w.r, W - w.r);
+    w.y = clamp(w.y, w.r, H - w.r);
+
+    // Slight chase
+    const dx = player.x - w.x;
+    const dy = player.y - w.y;
+    const d = Math.hypot(dx, dy);
+    if (d > 0) {
+      w.vx += (dx / d) * 30 * dt;
+      w.vy += (dy / d) * 30 * dt;
+      const spd = Math.hypot(w.vx, w.vy);
+      const maxSpd = WARDEN_SPEED_BASE + elapsed * 3;
+      if (spd > maxSpd) { w.vx *= maxSpd / spd; w.vy *= maxSpd / spd; }
+    }
+
+    if (circleCollide(player, w) && invulnTimer <= 0) {
+      takeDamage();
+    }
+  });
+
+  // ── Hazard Spawning & Movement ──
+  hazardSpawnTimer += dt;
+  if (hazardSpawnTimer >= SPAWN_HAZARD_INTERVAL) {
+    hazardSpawnTimer = 0;
+    if (hazards.length < 8) spawnHazard();
+  }
+
+  hazards.forEach(h => {
+    h.pulse += dt * 5;
+    h.x += h.vx * dt;
+    h.y += h.vy * dt;
+    if (h.x < h.r || h.x > W - h.r) h.vx *= -1;
+    if (h.y < h.r || h.y > H - h.r) h.vy *= -1;
+    h.x = clamp(h.x, h.r, W - h.r);
+    h.y = clamp(h.y, h.r, H - h.r);
+    h.life -= dt;
+
+    if (circleCollide(player, h) && invulnTimer <= 0) {
+      takeDamage();
+    }
+  });
+
+  // Remove dead hazards
+  hazards = hazards.filter(h => h.life > 0);
+
+  // ── Particles ──
+  particles.forEach(p => {
+    p.x += p.vx * dt;
+    p.y += p.vy * dt;
+    p.life -= dt;
+  });
+  particles = particles.filter(p => p.life > 0);
+
+  // ── Near Completion Check ──
+  nearComplete = (eggsCollected >= 7 || polypsHealed >= 4);
+
+  // ── Win Check ──
+  // Win ONLY when Eggs is exactly 8/8 AND Polyps is exactly 5/5.
+  // Must NOT win at 4/8, 7/8, or with any unhealed polyp.
+  if (eggsCollected >= MAX_EGGS && polypsHealed >= MAX_POLYPS) {
+    gameState = STATE.WIN;
+    sfxWin();
+    document.getElementById("hud").style.display = "none";
+    document.getElementById("win-screen").classList.remove("hidden");
+    document.getElementById("win-stats").textContent = "Eggs 8/8  ·  Polyps 5/5  ·  Score " + score;
+  }
+
+  updateHUD();
+}
+
+// ─── Render ───
+function render() {
+  ctx.save();
+
+  // Screen shake
+  if (shakeTimer > 0) {
+    const sx = (Math.random() - 0.5) * shakeIntensity * 2;
+    const sy = (Math.random() - 0.5) * shakeIntensity * 2;
+    ctx.translate(sx, sy);
+  }
+
+  // Clear
+  ctx.fillStyle = "#001830";
+  ctx.fillRect(0, 0, W, H);
+
+  // ── Background: underwater gradient ──
+  const grad = ctx.createLinearGradient(0, 0, 0, H);
+  grad.addColorStop(0, "#002244");
+  grad.addColorStop(0.5, "#001830");
+  grad.addColorStop(1, "#000d1a");
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, W, H);
+
+  // ── Caustics ──
+  drawCaustics();
+
+  // ── Bubbles ──
+  drawBubbles();
+
+  // ── Decorative Coral (background) ──
+  drawDecorativeCoral();
+
+  // ── Polyps ──
+  polyps.forEach(p => drawPolyp(p));
+
+  // ── Eggs ──
+  eggs.forEach(e => { if (e.active) drawEgg(e); });
+
+  // ── Hazards ──
+  hazards.forEach(h => drawHazard(h));
+
+  // ── Wardens ──
+  wardens.forEach(w => drawWarden(w));
+
+  // ── Player ──
+  drawPlayer();
+
+  // ── Particles ──
+  particles.forEach(p => {
+    const alpha = p.life / p.maxLife;
+    ctx.globalAlpha = alpha;
+    ctx.fillStyle = p.color;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+    ctx.fill();
+  });
+  ctx.globalAlpha = 1;
+
+  // ── Near completion flash ──
+  if (nearComplete) {
+    ctx.fillStyle = "rgba(255,255,0,0.05)";
+    ctx.fillRect(0, 0, W, H);
+  }
+
+  ctx.restore();
+}
+
+// ── Caustics ──
+let causticTime = 0;
+function drawCaustics() {
+  causticTime += 0.016;
+  ctx.save();
+  ctx.globalAlpha = 0.06;
+  for (let i = 0; i < 5; i++) {
+    const x = W * (0.2 + 0.15 * i) + Math.sin(causticTime + i) * 30;
+    const y = H * 0.3 + Math.cos(causticTime * 0.7 + i * 2) * 20;
+    const r = 60 + Math.sin(causticTime * 1.3 + i) * 20;
+    const g = ctx.createRadialGradient(x, y, 0, x, y, r);
+    g.addColorStop(0, "#4df");
+    g.addColorStop(1, "transparent");
+    ctx.fillStyle = g;
+    ctx.fillRect(x - r, y - r, r * 2, r * 2);
+  }
+  ctx.restore();
+}
+
+// ── Bubbles ──
+let bubbleTimer = 0;
+function drawBubbles() {
+  bubbleTimer += 0.016;
+  if (Math.random() < 0.03) {
+    particles.push({
+      x: rand(0, W), y: H + 10,
+      vx: rand(-10, 10), vy: rand(-60, -40),
+      life: 4, maxLife: 4,
+      color: "rgba(200,230,255,0.4)", r: rand(2, 5)
+    });
+  }
+}
+
+// ── Decorative Coral ──
+function drawDecorativeCoral() {
+  ctx.save();
+  for (let i = 0; i < 7; i++) {
+    const x = W * (0.1 + 0.13 * i);
+    const y = H;
+    const h = 30 + Math.sin(i * 1.5) * 15;
+    const w = 20 + Math.sin(i * 2) * 8;
+    ctx.fillStyle = `hsl(${350 + i * 10}, 60%, ${30 + i * 3}%)`;
+    ctx.beginPath();
+    ctx.moveTo(x - w, y);
+    ctx.quadraticCurveTo(x - w * 0.5, y - h, x, y - h - 5);
+    ctx.quadraticCurveTo(x + w * 0.5, y - h, x + w, y);
+    ctx.fill();
+  }
+  ctx.restore();
+}
+
+// ── Player (Coral Dragon) ──
+function drawPlayer() {
+  const p = player;
+  const blink = invulnTimer > 0 && Math.floor(invulnTimer * 10) % 2 === 0;
+
+  ctx.save();
+  ctx.translate(p.x, p.y);
+  ctx.scale(p.facing, 1);
+
+  if (blink) ctx.globalAlpha = 0.4;
+
+  // Glow
+  const glow = ctx.createRadialGradient(0, 0, 0, 0, 0, 30);
+  glow.addColorStop(0, "rgba(0,255,170,0.3)");
+  glow.addColorStop(1, "transparent");
+  ctx.fillStyle = glow;
+  ctx.fillRect(-30, -30, 60, 60);
+
+  // Body
+  ctx.fillStyle = "#0c8";
+  ctx.beginPath();
+  ctx.ellipse(0, 0, 18, 12, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Wings (animated)
+  const wingY = Math.sin(p.wingPhase) * 6;
+  ctx.fillStyle = "#0fa";
+  ctx.beginPath();
+  ctx.moveTo(-5, -5);
+  ctx.quadraticCurveTo(-15, -15 + wingY, -20, -5 + wingY);
+  ctx.quadraticCurveTo(-15, -2, -5, 0);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(5, -5);
+  ctx.quadraticCurveTo(15, -15 + wingY, 20, -5 + wingY);
+  ctx.quadraticCurveTo(15, -2, 5, 0);
+  ctx.fill();
+
+  // Head
+  ctx.fillStyle = "#0e6";
+  ctx.beginPath();
+  ctx.arc(12, -3, 8, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Eye
+  ctx.fillStyle = "#fff";
+  ctx.beginPath();
+  ctx.arc(14, -4, 2.5, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = "#000";
+  ctx.beginPath();
+  ctx.arc(15, -4, 1.2, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Tail
+  ctx.strokeStyle = "#0c8";
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(-15, 0);
+  ctx.quadraticCurveTo(-25, 5 + Math.sin(p.wingPhase * 0.5) * 3, -30, 0);
+  ctx.stroke();
+
+  ctx.restore();
+}
+
+// ── Egg ──
+function drawEgg(e) {
+  ctx.save();
+  const bob = Math.sin(e.bobPhase) * 4;
+  const glow = 0.3 + Math.sin(e.glowPhase) * 0.15;
+  ctx.translate(e.x, e.y + bob);
+
+  const g = ctx.createRadialGradient(0, 0, 0, 0, 0, 20);
+  g.addColorStop(0, `rgba(77,220,255,${glow})`);
+  g.addColorStop(1, "transparent");
+  ctx.fillStyle = g;
+  ctx.fillRect(-20, -20, 40, 40);
+
+  ctx.fillStyle = "#4df";
+  ctx.beginPath();
+  ctx.ellipse(0, 0, e.r, e.r * 1.2, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = "rgba(255,255,255,0.5)";
+  ctx.beginPath();
+  ctx.ellipse(-3, -4, 3, 2, -0.5, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.restore();
+}
+
+// ── Polyp ──
+function drawPolyp(p) {
+  ctx.save();
+  ctx.translate(p.x, p.y);
+
+  const pulse = Math.sin(p.pulsePhase + elapsed * 2) * 0.1;
+  const r = p.r * (1 + pulse);
+
+  if (p.healed) {
+    const g = ctx.createRadialGradient(0, 0, 0, 0, 0, r + 10);
+    g.addColorStop(0, "rgba(0,255,100,0.4)");
+    g.addColorStop(1, "transparent");
+    ctx.fillStyle = g;
+    ctx.fillRect(-(r + 10), -(r + 10), (r + 10) * 2, (r + 10) * 2);
+
+    ctx.fillStyle = "#0f6";
+    ctx.beginPath();
+    ctx.arc(0, 0, r, 0, Math.PI * 2);
+    ctx.fill();
+
+    for (let i = 0; i < 6; i++) {
+      const a = (Math.PI * 2 / 6) * i + elapsed;
+      ctx.strokeStyle = "#0f6";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.quadraticCurveTo(Math.cos(a) * r * 1.5, Math.sin(a) * r * 1.5 - 5, Math.cos(a) * r * 2, Math.sin(a) * r * 2);
+      ctx.stroke();
+    }
+  } else {
+    ctx.fillStyle = "#632";
+    ctx.beginPath();
+    ctx.arc(0, 0, r, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.strokeStyle = "#310";
+    ctx.lineWidth = 1.5;
+    for (let i = 0; i < 3; i++) {
+      const a = (Math.PI * 2 / 3) * i;
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.lineTo(Math.cos(a) * r * 0.8, Math.sin(a) * r * 0.8);
+      ctx.stroke();
+    }
+
+    if (p.healProgress > 0) {
+      ctx.fillStyle = "rgba(0,0,0,0.5)";
+      ctx.fillRect(-15, -r - 10, 30, 4);
+      ctx.fillStyle = "#0f0";
+      ctx.fillRect(-15, -r - 10, 30 * (p.healProgress / HEAL_DURATION), 4);
+    }
+  }
+
+  ctx.restore();
+}
+
+// ── Warden ──
+function drawWarden(w) {
+  ctx.save();
+  ctx.translate(w.x, w.y);
+
+  const g = ctx.createRadialGradient(0, 0, 0, 0, 0, w.r + 8);
+  g.addColorStop(0, "rgba(170,100,255,0.2)");
+  g.addColorStop(1, "transparent");
+  ctx.fillStyle = g;
+  ctx.fillRect(-(w.r + 8), -(w.r + 8), (w.r + 8) * 2, (w.r + 8) * 2);
+
+  ctx.fillStyle = "#80f";
+  ctx.beginPath();
+  ctx.arc(0, 0, w.r, 0, Math.PI * 2);
+  ctx.fill();
+
+  for (let i = 0; i < 8; i++) {
+    const a = (Math.PI * 2 / 8) * i + w.phase;
+    ctx.fillStyle = "#a0f";
+    ctx.beginPath();
+    const x1 = Math.cos(a) * w.r;
+    const y1 = Math.sin(a) * w.r;
+    const x2 = Math.cos(a + 0.2) * (w.r + 6);
+    const y2 = Math.sin(a + 0.2) * (w.r + 6);
+    const x3 = Math.cos(a - 0.2) * (w.r + 6);
+    const y3 = Math.sin(a - 0.2) * (w.r + 6);
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.lineTo(x3, y3);
+    ctx.fill();
+  }
+
+  ctx.fillStyle = "#f0f";
+  ctx.beginPath();
+  ctx.arc(4, -3, 3, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = "#000";
+  ctx.beginPath();
+  ctx.arc(5, -3, 1.5, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.restore();
+}
+
+// ── Hazard ──
+function drawHazard(h) {
+  ctx.save();
+  ctx.translate(h.x, h.y);
+
+  const pulse = 1 + Math.sin(h.pulse) * 0.2;
+  const r = h.r * pulse;
+
+  const g = ctx.createRadialGradient(0, 0, 0, 0, 0, r + 5);
+  g.addColorStop(0, "rgba(255,50,50,0.3)");
+  g.addColorStop(1, "transparent");
+  ctx.fillStyle = g;
+  ctx.fillRect(-(r + 5), -(r + 5), (r + 5) * 2, (r + 5) * 2);
+
+  ctx.fillStyle = "#f33";
+  ctx.beginPath();
+  ctx.arc(0, 0, r, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = "#f66";
+  ctx.beginPath();
+  ctx.arc(-2, -2, r * 0.4, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.restore();
+}
+
+// ─── Game Loop ───
+function gameLoop(timestamp) {
+  requestAnimationFrame(gameLoop);
+
+  if (lastTime === 0) lastTime = timestamp;
+  let dt = (timestamp - lastTime) / 1000;
+  lastTime = timestamp;
+
+  if (gameState === STATE.PLAYING) {
+    update(dt);
+  } else if (gameState === STATE.PAUSED) {
+    // Don't update, but still render
+  } else if (gameState === STATE.MENU) {
+    // Animate background only
+    causticTime += 0.016;
+    if (Math.random() < 0.03) {
+      particles.push({
+        x: rand(0, W), y: H + 10,
+        vx: rand(-10, 10), vy: rand(-60, -40),
+        life: 4, maxLife: 4,
+        color: "rgba(200,230,255,0.3)", r: rand(2, 5)
+      });
+    }
+    particles.forEach(p => { p.x += p.vx * 0.016; p.y += p.vy * 0.016; p.life -= 0.016; });
+    particles = particles.filter(p => p.life > 0);
+  }
+  // WIN/LOSE: still render but don't update
+
+  render();
+}
+
+// ─── Start ───
+requestAnimationFrame(gameLoop);
+
+})();
+</script>
+<script data-occamy-embed-guard>
+(() => {
+  const blocked = new Set(["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Space"]);
+  window.addEventListener("keydown", (event) => { if (blocked.has(event.code)) event.preventDefault(); }, { capture: true, passive: false });
+  window.addEventListener("pointerdown", () => window.focus(), { capture: true });
+})();
+</script>
+</body>
+</html>
