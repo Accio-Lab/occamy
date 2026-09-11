@@ -188,6 +188,11 @@ This repository is released under the [Apache License 2.0](LICENSE). See the Hug
 
 ---
 
-## 8. Contact Us
+## 8. Contact and Correspondence
 
-For questions or feedback, please open an [issue](https://github.com/Accio-Lab/occamy/issues).
+For research inquiries, model questions, or collaboration opportunities, please contact the corresponding authors:
+
+- [Junbo Li](mailto:junboolee@gmail.com)
+- [Hongwei Xue](mailto:xuehongwe@gmail.com)
+
+For bug reports or feature requests, please open an [issue](https://github.com/Accio-Lab/occamy/issues).
