@@ -86,12 +86,26 @@ Architecture fields follow the starting checkpoint's published model card. Occam
 
 ## 4. Training Recipe
 
-Occamy uses staged specialization and consolidation:
+Occamy is trained through two complementary specialization tracks, followed by parameter-space consolidation and a final SAO stage:
 
 ```text
-Qwen3.6-35B-A3B
-  ├─ Marathon Expert: SFT → HDPO ┐
-  └─ Sprint Expert: SFT          ├─ Uniform merge → SAO → Occamy-1.0
+                         Qwen3.6-35B-A3B
+                                  │
+                 ┌────────────────┴────────────────┐
+                 │                                 │
+                 ▼                                 ▼
+        Marathon Expert                     Sprint Expert
+           SFT → HDPO                             SFT
+                 │                                 │
+                 └────────────────┬────────────────┘
+                                  ▼
+                    Uniform parameter-space merge
+                                  │
+                                  ▼
+                                 SAO
+                                  │
+                                  ▼
+                             Occamy-1.0
 ```
 
 The Marathon Expert learns sustained execution and accuracy-conditioned efficiency, while the Sprint Expert preserves broader agentic capability. A uniform parameter-space merge combines both experts into one checkpoint with no inference-time routing or ensembling, and a final Single-Rollout Asynchronous Optimization (SAO) stage refines the merged policy on a broad co-work mixture.
