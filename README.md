@@ -15,7 +15,7 @@
 <div align="center" style="line-height: 1;">
   <a href="https://accio-lab.github.io/occamy/"><img alt="Project Website" src="https://img.shields.io/badge/Website-Occamy--1.0-087F6A"></a>
   <a href="https://huggingface.co/Accio-Lab/Occamy-1.0"><img alt="Hugging Face" src="https://img.shields.io/badge/%F0%9F%A4%97%20Model-Occamy--1.0-FFD21E"></a>
-  <a href="report/occamy1.0.pdf"><img alt="Technical Report" src="https://img.shields.io/badge/%F0%9F%93%84%20Report-Occamy--1.0-B31B1B"></a>
+  <a href="https://accio-lab.github.io/occamy/report/occamy1.0.pdf"><img alt="Technical Report" src="https://img.shields.io/badge/%F0%9F%93%84%20Report-Occamy--1.0-B31B1B"></a>
   <a href="https://github.com/Accio-Lab/Dressage"><img alt="Dressage" src="https://img.shields.io/badge/Training-Dressage-087F6A"></a>
   <a href="LICENSE"><img alt="License" src="https://img.shields.io/badge/License-Apache%202.0-blue"></a>
 </div>
