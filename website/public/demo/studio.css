@@ -1,0 +1,1839 @@
+@font-face {
+  font-family: "Accio Inter";
+  src: url("fonts/Inter-latin-var.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 300 700;
+  font-display: swap;
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: "Accio Inter";
+  src: url("fonts/Inter-latin-ext-var.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 300 700;
+  font-display: swap;
+  unicode-range: U+0100-02BA, U+02BD-02FF, U+1E00-1E9F, U+2020, U+20A0-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: "Accio Noto Sans";
+  src: url("fonts/Noto-Sans-regular.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Accio Noto Sans";
+  src: url("fonts/Noto-Sans-500.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Accio Noto Sans";
+  src: url("fonts/Noto-Sans-600.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Accio Noto Sans";
+  src: url("fonts/Noto-Sans-700.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Gmail Roboto";
+  src: url("fonts/Roboto-latin-var.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+:root {
+  color-scheme: light;
+  --accio-canvas: #e9e9e6;
+  --accio-bg: #ffffff;
+  --accio-panel: #fafaf9;
+  --accio-soft: #f4f4f2;
+  --accio-soft-2: #efefed;
+  --accio-text: #292a28;
+  --accio-muted: #858783;
+  --accio-faint: #a6a8a4;
+  --accio-line: #e4e4e1;
+  --accio-line-strong: #d7d8d4;
+  --accio-green: #119267;
+  --accio-green-soft: #e5f7f0;
+  --accio-amber: #a86a14;
+  --accio-amber-soft: #fff5e6;
+  --accio-red: #b54b43;
+  --accio-red-soft: #fff0ee;
+  --accio-code: #f1f1ef;
+}
+
+* { box-sizing: border-box; }
+
+html,
+body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+  background: var(--accio-canvas);
+  color: var(--accio-text);
+  font-family: "Accio Inter", "Accio Noto Sans", ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 14px;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: geometricPrecision;
+}
+
+body {
+  display: flex;
+  justify-content: center;
+}
+
+button,
+select { font: inherit; }
+button { color: inherit; }
+body.recording,
+body.recording * { cursor: none !important; }
+
+.studio-controls {
+  position: fixed;
+  z-index: 40;
+  top: 12px;
+  left: 50%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 42px;
+  padding: 6px 8px;
+  transform: translateX(-50%);
+  border: 1px solid rgba(255, 255, 255, .13);
+  border-radius: 11px;
+  background: rgba(29, 30, 29, .94);
+  box-shadow: 0 12px 34px rgba(0, 0, 0, .22);
+  color: #fff;
+  transition: opacity 180ms ease, transform 180ms ease;
+}
+
+.studio-controls label { display: flex; align-items: center; gap: 6px; }
+.studio-controls label > span,
+.control-status { color: #bcbdbb; font-size: 12px; }
+.studio-controls select,
+.studio-controls button {
+  height: 30px;
+  padding: 0 10px;
+  border: 1px solid rgba(255, 255, 255, .14);
+  border-radius: 7px;
+  background: #2b2c2b;
+  color: #fff;
+}
+.studio-controls button { cursor: pointer; }
+.studio-controls .record-button { background: #116b4d; }
+.control-status { min-width: 76px; }
+body.clean-mode .studio-controls,
+body.recording .studio-controls {
+  pointer-events: none;
+  opacity: 0;
+  transform: translate(-50%, -8px);
+}
+
+.accio-window {
+  position: relative;
+  width: min(1500px, 100vw);
+  height: 100vh;
+  min-height: 640px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 420px;
+  overflow: hidden;
+  background: var(--accio-bg);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, .05), 0 18px 70px rgba(0, 0, 0, .09);
+  transition: grid-template-columns 320ms cubic-bezier(.22, 1, .36, 1);
+}
+.accio-window.prompt-guided { grid-template-columns: minmax(0, 1fr) 520px; }
+.accio-window.prompt-guided .files-pane {
+  position: relative;
+  z-index: 56;
+  grid-template-rows: 54px 0 minmax(0, 1fr) 34px;
+  box-shadow: -12px 0 36px rgba(36, 45, 39, .08);
+}
+.accio-window.prompt-guided .folder-section {
+  overflow: hidden;
+  opacity: 0;
+}
+.accio-window.prompt-guided .preview-body {
+  padding: 18px 20px 30px;
+  font-size: 14px;
+  line-height: 1.58;
+}
+.accio-window.prompt-guided .preview-body h1 { font-size: 18px; }
+.accio-window.prompt-guided .preview-body h2 { margin-top: 17px; font-size: 17px; }
+.accio-window.prompt-guided .preview-body h3 { margin-top: 15px; font-size: 15px; }
+
+.conversation-shell {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  display: grid;
+  grid-template-rows: 54px 1fr;
+  background: var(--accio-bg);
+}
+
+.prompt-composer {
+  position: absolute;
+  z-index: 48;
+  right: 28px;
+  bottom: 26px;
+  left: 28px;
+  display: flex;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(18px);
+  transition: opacity 260ms ease, transform 360ms cubic-bezier(.22, 1, .36, 1);
+}
+.prompt-composer.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+.composer-shell {
+  width: min(900px, calc(100% - 12px));
+  overflow: hidden;
+  border: 1px solid rgba(39, 44, 39, .16);
+  border-radius: 20px;
+  background: rgba(255, 255, 253, .98);
+  box-shadow: 0 18px 55px rgba(30, 36, 31, .14), 0 2px 8px rgba(30, 36, 31, .07);
+  transition: transform 260ms ease, opacity 220ms ease;
+}
+.prompt-composer.sending .composer-shell {
+  opacity: 1;
+  transform: translateY(-4px) scale(.995);
+}
+.prompt-composer.handoff { opacity: 0; transform: none; transition: none; }
+.composer-field {
+  min-height: clamp(260px, 30vh, 360px);
+  max-height: min(520px, 54vh);
+  padding: 28px 30px 18px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  color: #282b28;
+  font-size: 20px;
+  line-height: 1.5;
+}
+.composer-field::-webkit-scrollbar,
+.prompt-card .prompt-copy::-webkit-scrollbar { width: 6px; }
+.composer-field::-webkit-scrollbar-thumb,
+.prompt-card .prompt-copy::-webkit-scrollbar-thumb {
+  border-radius: 6px;
+  background: #d3d7d1;
+}
+.composer-field:empty:not(.is-typing)::before {
+  content: "Ask Accio Work to complete a task…";
+  color: #969a94;
+}
+.composer-field.is-typing::after {
+  content: "";
+  display: inline-block;
+  width: 2px;
+  height: 1.1em;
+  margin-left: 3px;
+  border-radius: 1px;
+  background: var(--accio-green);
+  vertical-align: -.14em;
+  animation: prompt-caret 720ms steps(1, end) infinite;
+}
+.composer-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 56px;
+  padding: 6px 12px 12px 18px;
+  color: var(--accio-muted);
+  font-size: 12px;
+}
+.composer-context { display: inline-flex; align-items: center; gap: 8px; }
+.composer-plus {
+  display: inline-grid;
+  width: 24px;
+  height: 24px;
+  place-items: center;
+  border: 1px solid var(--accio-line);
+  border-radius: 50%;
+  color: #4e524d;
+  font-size: 18px;
+}
+.composer-send {
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  background: #d9ddd8;
+  color: #fff;
+  font-size: 22px;
+  line-height: 1;
+  transition: background 180ms ease, transform 180ms ease, box-shadow 180ms ease;
+}
+.composer-send.ready {
+  background: var(--accio-green);
+  box-shadow: 0 5px 14px rgba(21, 126, 89, .24);
+  transform: scale(1.04);
+}
+.prompt-composer.sending .composer-send { transform: scale(.88); }
+.prompt-card.awaiting-send { display: none; }
+
+.narrative-intro {
+  position: absolute;
+  z-index: 55;
+  inset: 54px 0 0;
+  display: grid;
+  place-items: center;
+  padding: 36px;
+  background: rgba(246, 247, 244, .9);
+  backdrop-filter: blur(7px) saturate(.92);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(8px);
+  transition: opacity 280ms ease, transform 360ms cubic-bezier(.22, 1, .36, 1);
+}
+.narrative-intro.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+.prompt-guided .narrative-intro {
+  z-index: 58;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: auto;
+  width: 520px;
+  place-items: center;
+  padding: 28px 24px;
+  background: rgba(246, 247, 244, .97);
+  backdrop-filter: blur(5px) saturate(.96);
+}
+.prompt-guided .narrative-card {
+  width: 100%;
+  padding: 28px 28px 26px;
+  border-top: 3px solid #46b88b;
+  box-shadow: 0 18px 48px rgba(37, 42, 37, .11);
+}
+.prompt-guided .narrative-card h2 {
+  margin-top: 12px;
+  font-size: 27px;
+  line-height: 1.18;
+}
+.prompt-guided .narrative-summary {
+  font-size: 16px;
+  line-height: 1.48;
+}
+.prompt-guided .narrative-points {
+  gap: 9px;
+  margin: 20px 0 22px;
+}
+.prompt-guided .narrative-points li {
+  grid-template-columns: 30px minmax(0, 1fr);
+  gap: 10px;
+  font-size: 15.5px;
+  line-height: 1.45;
+}
+.prompt-guided .narrative-points li::before {
+  width: 28px;
+  height: 28px;
+}
+.prompt-guided .narrative-footer {
+  align-items: flex-end;
+}
+.prompt-guided .narrative-badge {
+  max-width: 310px;
+  white-space: normal;
+}
+.narrative-card {
+  position: relative;
+  width: min(880px, calc(100% - 36px));
+  overflow: hidden;
+  padding: 34px 40px 30px;
+  border: 1px solid rgba(35, 39, 35, .12);
+  border-radius: 18px;
+  background: rgba(255, 255, 253, .98);
+  box-shadow: 0 24px 70px rgba(37, 42, 37, .14);
+}
+.narrative-header,
+.narrative-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+.narrative-meta {
+  color: #167553;
+  font-size: 13px;
+  font-weight: 760;
+  letter-spacing: .075em;
+  text-transform: uppercase;
+}
+.narrative-read-time,
+.narrative-count {
+  color: #777b75;
+  font-size: 13px;
+  font-weight: 650;
+  white-space: nowrap;
+}
+.narrative-card h2 {
+  max-width: 760px;
+  margin: 14px 0 10px;
+  color: #242724;
+  font-size: 32px;
+  line-height: 1.17;
+  letter-spacing: -.75px;
+}
+.narrative-summary {
+  max-width: 780px;
+  margin: 0;
+  color: #4d514d;
+  font-size: 18px;
+  line-height: 1.5;
+}
+.narrative-points {
+  display: grid;
+  gap: 10px;
+  margin: 24px 0 26px;
+  padding: 0;
+  list-style: none;
+  counter-reset: narrative-point;
+}
+.narrative-points li {
+  counter-increment: narrative-point;
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr);
+  align-items: start;
+  gap: 12px;
+  color: #353835;
+  font-size: 17px;
+  line-height: 1.48;
+  opacity: 0;
+  transform: translateY(7px);
+  transition: opacity 360ms ease, transform 420ms cubic-bezier(.22, 1, .36, 1);
+}
+.narrative-points li::before {
+  content: counter(narrative-point, decimal-leading-zero);
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  background: #e5f5ed;
+  color: #14724f;
+  font-size: 12px;
+  font-weight: 760;
+}
+.narrative-points li.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+.narrative-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  padding: 6px 10px;
+  border: 1px solid #cce7da;
+  border-radius: 8px;
+  background: #eff9f4;
+  color: #166c4c;
+  font-size: 13.5px;
+  font-weight: 680;
+}
+.narrative-progress {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 5px;
+  overflow: hidden;
+  background: #e8ebe7;
+}
+.narrative-progress i {
+  display: block;
+  width: 0;
+  height: 100%;
+  background: linear-gradient(90deg, #139268, #5cc298);
+}
+.narrative-intro.reading .narrative-progress i {
+  animation: narrative-reading var(--narrative-hold, 10s) linear forwards;
+}
+@keyframes narrative-reading { to { width: 100%; } }
+
+.stage-subtitle {
+  position: absolute;
+  z-index: 60;
+  right: 24px;
+  bottom: 24px;
+  left: 24px;
+  min-height: 180px;
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 16px;
+  padding: 20px 24px;
+  border: 1px solid rgba(37, 40, 37, .12);
+  border-radius: 12px;
+  background: rgba(39, 41, 38, .96);
+  box-shadow: 0 16px 42px rgba(0, 0, 0, .18);
+  color: #fff;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(12px);
+  transition: opacity 220ms ease, transform 220ms cubic-bezier(.22, 1, .36, 1);
+}
+.stage-subtitle::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  width: 0;
+  height: 4px;
+  border-radius: 0 0 12px 12px;
+  background: linear-gradient(90deg, #54c899, #9be3c6);
+}
+.stage-subtitle.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+.stage-subtitle-icon {
+  width: 48px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+  border-radius: 9px;
+  background: #fff;
+  color: #c94a42;
+  font-size: 17px;
+  font-weight: 750;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .08);
+}
+.stage-subtitle-copy {
+  min-width: 0;
+  display: grid;
+  gap: 5px;
+}
+.stage-subtitle-meta {
+  color: #b9bbb6;
+  font-size: 12.5px;
+  font-weight: 650;
+  letter-spacing: .055em;
+  text-transform: uppercase;
+}
+.stage-subtitle-copy strong {
+  color: #fff;
+  font-size: 22px;
+  line-height: 1.28;
+  letter-spacing: -.1px;
+}
+.stage-subtitle-lines {
+  display: grid;
+  gap: 5px;
+  color: #d8d9d6;
+  font-size: 16px;
+  line-height: 1.5;
+}
+.stage-subtitle-lines > span {
+  display: grid;
+  grid-template-columns: 118px minmax(0, 1fr);
+  gap: 10px;
+}
+.stage-subtitle-lines b {
+  color: #aeb1ab;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .045em;
+  text-transform: uppercase;
+}
+.stage-subtitle-result {
+  align-self: center;
+  padding: 7px 10px;
+  border: 1px solid rgba(144, 232, 195, .2);
+  border-radius: 6px;
+  background: rgba(21, 146, 103, .18);
+  color: #a8ebd2;
+  font-size: 13.5px;
+  font-weight: 650;
+  white-space: nowrap;
+}
+.stage-subtitle.revealing .stage-subtitle-copy > strong,
+.stage-subtitle.revealing .stage-subtitle-lines > span,
+.stage-subtitle.revealing .stage-subtitle-result {
+  opacity: 0;
+  animation: subtitle-line-in 360ms cubic-bezier(.22, 1, .36, 1) forwards;
+}
+.stage-subtitle.revealing .stage-subtitle-copy > strong { animation-delay: 80ms; }
+.stage-subtitle.revealing .stage-subtitle-lines > span:nth-child(1) { animation-delay: var(--subtitle-step, 320ms); }
+.stage-subtitle.revealing .stage-subtitle-lines > span:nth-child(2) { animation-delay: calc(var(--subtitle-step, 320ms) * 2); }
+.stage-subtitle.revealing .stage-subtitle-lines > span:nth-child(3) { animation-delay: calc(var(--subtitle-step, 320ms) * 3); }
+.stage-subtitle.revealing .stage-subtitle-result { animation-delay: calc(var(--subtitle-step, 320ms) * 4); }
+.stage-subtitle.revealing::after { animation: subtitle-reading var(--subtitle-hold, 3s) linear forwards; }
+@keyframes subtitle-line-in {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes subtitle-reading { to { width: 100%; } }
+
+.conversation-header {
+  display: grid;
+  grid-template-columns: 170px minmax(0, 1fr) 150px;
+  align-items: center;
+  gap: 16px;
+  padding: 0 24px;
+  border-bottom: 1px solid var(--accio-line);
+  background: rgba(255, 255, 255, .97);
+}
+
+.product-lockup,
+.model-lockup,
+.files-header > div,
+.assistant-header,
+.work-summary,
+.folder-root,
+.files-footer {
+  display: flex;
+  align-items: center;
+}
+
+.product-lockup { gap: 8px; white-space: nowrap; }
+.product-lockup strong { font-size: 14px; letter-spacing: -.2px; }
+.accio-mark,
+.assistant-avatar {
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: conic-gradient(from 35deg, #b7e86a, #edf5a6, #82c663, #d7eb78);
+  color: #20221f;
+  box-shadow: inset 0 0 0 2px #fff, 0 0 0 1px #bac3a0;
+  font-family: Georgia, serif;
+  font-weight: 700;
+}
+.accio-mark { width: 25px; height: 25px; font-size: 11px; }
+.conversation-header h1 {
+  min-width: 0;
+  margin: 0;
+  overflow: hidden;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -.1px;
+}
+.model-lockup {
+  justify-content: flex-end;
+  gap: 7px;
+  color: #5c5e5a;
+  font-size: 12px;
+  white-space: nowrap;
+}
+.model-dot,
+.verified-dot {
+  width: 7px;
+  height: 7px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: var(--accio-green);
+  box-shadow: 0 0 0 3px var(--accio-green-soft);
+}
+
+.conversation-scroll {
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: #d4d5d1 transparent;
+}
+
+.conversation-column {
+  width: min(840px, calc(100% - 72px));
+  margin: 0 auto;
+  padding: 24px 0 52px;
+}
+
+.prompt-card {
+  overflow: hidden;
+  border: 1px solid var(--accio-line);
+  border-radius: 13px;
+  background: var(--accio-soft);
+}
+.prompt-card > header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  min-height: 39px;
+  padding: 0 15px;
+  border-bottom: 1px solid rgba(0, 0, 0, .055);
+  color: var(--accio-muted);
+  font-size: 12.5px;
+}
+.prompt-kicker { color: #51534f; font-weight: 650; letter-spacing: .01em; }
+.prompt-path {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: "SFMono-Regular", Consolas, monospace;
+  font-size: 10.5px;
+}
+.prompt-card .prompt-copy {
+  min-height: 170px;
+  max-height: 260px;
+  padding: 26px 28px;
+  overflow: auto;
+  white-space: pre-wrap;
+  font-size: 20px;
+  line-height: 1.5;
+}
+.prompt-card .prompt-copy:empty:not(.is-typing)::before {
+  content: "Press Play to enter the task";
+  color: var(--accio-faint);
+  font-size: 15px;
+}
+.prompt-card .prompt-copy.is-typing::after {
+  content: "";
+  display: inline-block;
+  width: 2px;
+  height: 1.1em;
+  margin-left: 3px;
+  border-radius: 1px;
+  background: var(--accio-green);
+  vertical-align: -.14em;
+  animation: prompt-caret 720ms steps(1, end) infinite;
+}
+@keyframes prompt-caret { 50% { opacity: 0; } }
+
+.entrance { animation: phoenix-message-bubble-push-up 920ms cubic-bezier(.22, 1, .36, 1) both; }
+@keyframes phoenix-message-bubble-push-up {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.assistant-message {
+  margin-top: 28px;
+  opacity: 0;
+  transform: translateY(12px);
+}
+.assistant-message.visible { animation: assistant-enter 560ms cubic-bezier(.22, 1, .36, 1) forwards; }
+@keyframes assistant-enter { to { opacity: 1; transform: translateY(0); } }
+.assistant-header { gap: 8px; color: #41433f; font-size: 13px; }
+.assistant-avatar { width: 25px; height: 25px; font-size: 11px; }
+.assistant-header time { margin-left: 2px; color: var(--accio-faint); font-size: 11px; }
+
+.work-summary {
+  gap: 7px;
+  margin: 14px 0 10px 2px;
+  color: var(--accio-muted);
+  font-size: 12px;
+}
+.summary-icon { color: #7e807c; }
+.work-summary.is-working #workSummaryText {
+  color: #676966;
+  animation: working-pulse 1.15s ease-in-out infinite;
+}
+@keyframes working-pulse { 50% { opacity: .45; } }
+
+.activity-log { display: grid; gap: 5px; margin: 0 0 16px; }
+.activity-row {
+  min-height: 38px;
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 9px 5px 7px;
+  border: 1px solid #ececea;
+  border-radius: 7px;
+  background: #f7f7f5;
+  color: #646662;
+  font-size: 13px;
+  opacity: 0;
+  transform: translateY(6px);
+  animation: activity-enter 330ms cubic-bezier(.22, 1, .36, 1) forwards;
+}
+@keyframes activity-enter { to { opacity: 1; transform: translateY(0); } }
+.activity-icon {
+  width: 21px;
+  height: 21px;
+  display: grid;
+  place-items: center;
+  border-radius: 5px;
+  background: var(--accio-soft-2);
+  color: #6f716d;
+  font-size: 10px;
+  font-weight: 650;
+}
+.activity-copy { min-width: 0; }
+.activity-copy strong,
+.activity-copy span { overflow-wrap: anywhere; }
+.activity-copy strong { margin-right: 5px; color: #4f514e; font-weight: 600; }
+.activity-result { color: #858783; }
+.activity-row time { color: var(--accio-faint); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.activity-row.success .activity-icon { background: var(--accio-green-soft); color: var(--accio-green); }
+.activity-row.error { border-color: #f0dfc5; background: #fffaf2; }
+.activity-row.error .activity-icon { background: var(--accio-amber-soft); color: var(--accio-amber); }
+.activity-row.recovery { border-color: #dbece5; background: #f6fbf8; }
+.activity-row.recovery .activity-icon { background: var(--accio-green-soft); color: var(--accio-green); }
+.activity-row.gmail-stage-active {
+  border-color: #c8e6da;
+  background: #f3faf7;
+  box-shadow: inset 3px 0 0 var(--accio-green);
+}
+
+.assistant-answer { margin-top: 16px; color: #30322f; }
+.stream-caret {
+  display: inline;
+  margin-left: 2px;
+  color: var(--accio-green);
+  font-weight: 400;
+  animation: caret-pulse 900ms step-end infinite;
+}
+@keyframes caret-pulse { 50% { opacity: .18; } }
+
+.markdown-body {
+  font-size: 15.5px;
+  line-height: 1.64;
+}
+.markdown-body h1,
+.markdown-body h2,
+.markdown-body h3 { color: #292b28; letter-spacing: -.015em; }
+.markdown-body h1 { margin: 0 0 12px; font-size: 21px; }
+.markdown-body h2 { margin: 18px 0 7px; font-size: 17px; }
+.markdown-body h3 { margin: 15px 0 6px; font-size: 15.5px; }
+.markdown-body p { margin: 0 0 11px; }
+.markdown-body ul,
+.markdown-body ol { margin: 6px 0 13px; padding-left: 21px; }
+.markdown-body li { margin: 4px 0; }
+.markdown-body strong { font-weight: 650; }
+.markdown-body code {
+  padding: 2px 5px;
+  border-radius: 4px;
+  background: var(--accio-code);
+  color: #444641;
+  font-family: "SFMono-Regular", Consolas, monospace;
+  font-size: .88em;
+}
+.markdown-body pre {
+  margin: 10px 0 14px;
+  padding: 11px 12px;
+  overflow: auto;
+  border: 1px solid #e4e4e1;
+  border-radius: 7px;
+  background: #f8f8f6;
+  color: #40423e;
+  font-family: "SFMono-Regular", Consolas, monospace;
+  font-size: 11.5px;
+  line-height: 1.52;
+  white-space: pre-wrap;
+}
+.markdown-body pre code { padding: 0; background: transparent; font-size: inherit; }
+.markdown-body .check { color: #197b5a; }
+
+.artifact-cards { display: grid; gap: 6px; margin-top: 17px; }
+.artifact-card {
+  min-height: 48px;
+  display: grid;
+  grid-template-columns: 31px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 10px;
+  border: 1px solid var(--accio-line);
+  border-radius: 8px;
+  background: #fff;
+  opacity: 0;
+  transform: translateY(6px);
+  animation: activity-enter 360ms cubic-bezier(.22, 1, .36, 1) forwards;
+}
+.file-icon {
+  width: 31px;
+  height: 31px;
+  display: grid;
+  place-items: center;
+  border-radius: 6px;
+  background: var(--accio-soft);
+  color: #686a66;
+  font-size: 12px;
+}
+.artifact-card strong,
+.artifact-card small { display: block; }
+.artifact-card strong { margin-bottom: 1px; font-size: 12.5px; }
+.artifact-card small { color: var(--accio-muted); font-size: 10.5px; }
+.artifact-state { color: var(--accio-green); font-size: 11px; }
+
+.files-pane {
+  min-width: 0;
+  min-height: 0;
+  display: grid;
+  grid-template-rows: 54px 240px minmax(0, 1fr) 34px;
+  border-left: 1px solid var(--accio-line);
+  background: var(--accio-panel);
+}
+.files-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 0 15px;
+  border-bottom: 1px solid var(--accio-line);
+  background: #f7f7f5;
+}
+.files-header > div { gap: 7px; }
+.folder-glyph { color: #71736f; }
+.files-header strong { font-size: 13px; }
+.workspace-name {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--accio-muted);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 11px;
+}
+.folder-section { min-height: 0; border-bottom: 1px solid var(--accio-line); background: #fff; }
+.folder-root {
+  gap: 6px;
+  height: 36px;
+  padding: 0 13px;
+  border-bottom: 1px solid #f0f0ee;
+  color: #4d4f4b;
+  font-size: 11.5px;
+}
+.folder-root strong {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.folder-tree { height: calc(100% - 36px); padding: 5px 7px 7px; overflow-y: auto; scrollbar-width: thin; }
+.folder-row {
+  width: 100%;
+  height: 28px;
+  display: grid;
+  grid-template-columns: 17px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 5px;
+  padding: 0 7px 0 calc(7px + var(--depth, 0) * 13px);
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: #535550;
+  text-align: left;
+  font-size: 11.5px;
+}
+button.folder-row { cursor: pointer; }
+.folder-row:hover,
+.folder-row.active { background: var(--accio-soft); }
+.folder-row.pending { color: #a6a7a4; }
+.folder-row .tree-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tree-state { color: var(--accio-green); font-size: 10px; }
+
+.file-preview { min-height: 0; display: grid; grid-template-rows: 49px 1fr; background: #fff; }
+.file-preview > header {
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr);
+  align-items: center;
+  gap: 9px;
+  padding: 0 13px;
+  border-bottom: 1px solid var(--accio-line);
+}
+.preview-file-icon {
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  border-radius: 6px;
+  background: var(--accio-soft);
+  color: #676965;
+  font-size: 11px;
+}
+.file-preview header strong,
+.file-preview header small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.file-preview header strong { font-size: 12px; }
+.file-preview header small { margin-top: 2px; color: var(--accio-muted); font-size: 10.5px; }
+.preview-body {
+  min-height: 0;
+  overflow: auto;
+  padding: 15px 17px 24px;
+  background: #fff;
+  font-size: 12px;
+  line-height: 1.5;
+  scrollbar-width: thin;
+}
+.preview-body.empty { display: grid; place-items: center; color: var(--accio-faint); text-align: center; }
+.preview-body h1 { font-size: 15px; }
+.preview-body h2 { margin-top: 14px; font-size: 13px; }
+.preview-body h3 { margin-top: 12px; font-size: 12.5px; }
+.preview-body pre { margin: 0; border: 0; background: transparent; font-size: 10.5px; }
+.preview-body .prompt-focus {
+  margin-right: -7px;
+  margin-left: -9px;
+  padding: 7px 8px 7px 10px;
+  border-left: 3px solid #2bab7d;
+  border-radius: 0 7px 7px 0;
+  background: #ebf8f2;
+  color: #126b4b;
+  box-shadow: 0 0 0 1px rgba(43, 171, 125, .08);
+}
+
+.gmail-receipt {
+  display: grid;
+  gap: 13px;
+}
+.gmail-receipt-head {
+  display: grid;
+  gap: 5px;
+  padding-bottom: 11px;
+  border-bottom: 1px solid var(--accio-line);
+}
+.gmail-receipt-head small {
+  color: var(--accio-muted);
+  font-size: 10.5px;
+}
+.gmail-receipt-head strong {
+  overflow-wrap: anywhere;
+  font-size: 12px;
+  line-height: 1.4;
+}
+.gmail-receipt-live {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--accio-muted);
+  font-size: 10.5px;
+}
+.gmail-receipt-live::before {
+  width: 6px;
+  height: 6px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: #b7b9b5;
+  content: "";
+}
+.gmail-receipt-live.live::before {
+  background: var(--accio-green);
+  box-shadow: 0 0 0 3px var(--accio-green-soft);
+}
+.gmail-receipt-stages {
+  display: grid;
+  gap: 7px;
+}
+.receipt-stage {
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 8px;
+  padding: 8px 8px 8px 7px;
+  border: 1px solid var(--accio-line);
+  border-radius: 7px;
+  background: #fafaf9;
+  color: #767873;
+  transition: border-color 180ms ease, background 180ms ease, box-shadow 180ms ease, opacity 180ms ease;
+}
+.receipt-stage.pending { opacity: .52; }
+.receipt-stage.complete { color: #4f514d; }
+.receipt-stage.active {
+  border-color: #a9dbc8;
+  background: var(--accio-green-soft);
+  box-shadow: 0 0 0 2px rgba(17, 146, 103, .08);
+  color: #34483f;
+}
+.receipt-stage-index {
+  width: 20px;
+  height: 20px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: #ececea;
+  color: #777975;
+  font-size: 9.5px;
+  font-weight: 700;
+}
+.receipt-stage.complete .receipt-stage-index,
+.receipt-stage.active .receipt-stage-index {
+  background: var(--accio-green);
+  color: #fff;
+}
+.receipt-stage-copy {
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+.receipt-stage-copy strong {
+  color: inherit;
+  font-size: 11px;
+  line-height: 1.3;
+}
+.receipt-stage-copy small {
+  overflow-wrap: anywhere;
+  color: var(--accio-muted);
+  font-size: 9.8px;
+  line-height: 1.35;
+}
+.receipt-stage-value {
+  color: var(--accio-muted);
+  font-family: "SFMono-Regular", Consolas, monospace;
+  font-size: 9.5px;
+  white-space: nowrap;
+}
+.receipt-stage.active .receipt-stage-value,
+.receipt-stage.complete .receipt-stage-value { color: var(--accio-green); }
+
+.files-footer {
+  gap: 8px;
+  padding: 0 13px;
+  border-top: 1px solid var(--accio-line);
+  background: #f7f7f5;
+  color: var(--accio-muted);
+  font-size: 10.5px;
+}
+.files-footer .verified-dot { width: 6px; height: 6px; box-shadow: none; }
+.files-footer.pending .verified-dot { background: #b4b5b2; }
+.files-footer.failed .verified-dot { background: var(--accio-red); }
+.footer-model { margin-left: auto; color: #666864; }
+
+.gmail-web-page {
+  --gmail-canvas: #f6f8fc;
+  --gmail-surface: #fff;
+  --gmail-nav: #f6f8fc;
+  --gmail-search: #eaf1fb;
+  --gmail-line: #e1e5eb;
+  --gmail-ink: #202124;
+  --gmail-muted: #5f6368;
+  --gmail-blue-soft: #d3e3fd;
+  --gmail-blue: #0b57d0;
+  --gmail-green: #188038;
+  position: absolute;
+  z-index: 30;
+  inset: 0;
+  min-width: 0;
+  min-height: 0;
+  display: grid;
+  grid-template-rows: 64px minmax(0, 1fr);
+  overflow: hidden;
+  background: var(--gmail-canvas);
+  color: var(--gmail-ink);
+  pointer-events: none;
+  transform: translateX(100%);
+  visibility: hidden;
+  transition:
+    transform 680ms cubic-bezier(.22, 1, .36, 1),
+    visibility 0s linear 680ms;
+}
+.gmail-web-page.visible {
+  pointer-events: auto;
+  transform: translateX(0);
+  visibility: visible;
+  transition-delay: 0s;
+}
+.gmail-web-header {
+  display: grid;
+  grid-template-columns: 220px minmax(360px, 720px) minmax(180px, 1fr);
+  align-items: center;
+  gap: 18px;
+  padding: 0 22px;
+  border-bottom: 1px solid var(--gmail-line);
+  background: var(--gmail-surface);
+}
+.gmail-wordmark,
+.gmail-account,
+.gmail-search,
+.gmail-sender-row,
+.gmail-toolbar,
+.gmail-proof-strip,
+.gmail-readback-proof,
+.gmail-nav-item,
+.gmail-compose {
+  display: flex;
+  align-items: center;
+}
+.gmail-wordmark { gap: 12px; color: #5f6368; }
+.gmail-wordmark strong { font-size: 20px; font-weight: 500; letter-spacing: -.4px; }
+.gmail-menu { color: #5f6368; font-size: 18px; }
+.gmail-mark {
+  width: 30px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  border-radius: 5px;
+  background: linear-gradient(135deg, #ea4335 0 46%, #fbbc04 46% 54%, #4285f4 54% 100%);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 750;
+  box-shadow: inset 0 0 0 3px rgba(255,255,255,.9);
+}
+.gmail-search {
+  min-width: 0;
+  height: 46px;
+  gap: 11px;
+  padding: 0 16px;
+  border-radius: 23px;
+  background: var(--gmail-search);
+  color: var(--gmail-muted);
+  font-size: 13px;
+}
+.gmail-search > span:first-child { font-size: 18px; }
+.gmail-search > span:nth-child(2) { white-space: nowrap; }
+.gmail-search code {
+  min-width: 0;
+  overflow: hidden;
+  color: #4e5661;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: "SFMono-Regular", Consolas, monospace;
+  font-size: 10.5px;
+}
+.gmail-account { justify-content: flex-end; gap: 11px; color: var(--gmail-muted); font-size: 12px; }
+.gmail-account-avatar,
+.gmail-sender-avatar {
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: #0f9d58;
+  color: #fff;
+  font-weight: 650;
+}
+.gmail-account-avatar { width: 34px; height: 34px; font-size: 13px; }
+.gmail-web-body {
+  min-width: 0;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr);
+}
+.gmail-nav {
+  min-height: 0;
+  padding: 14px 12px;
+  background: var(--gmail-nav);
+}
+.gmail-compose {
+  width: 145px;
+  height: 54px;
+  gap: 12px;
+  margin: 0 0 15px 4px;
+  padding: 0 20px;
+  border-radius: 16px;
+  background: #c2e7ff;
+  color: #001d35;
+  box-shadow: 0 1px 2px rgba(60,64,67,.14);
+}
+.gmail-compose > span { font-size: 20px; }
+.gmail-compose strong { font-size: 13px; font-weight: 500; }
+.gmail-nav-item {
+  height: 32px;
+  gap: 14px;
+  padding: 0 15px 0 19px;
+  border-radius: 0 16px 16px 0;
+  color: #3c4043;
+  font-size: 12px;
+}
+.gmail-nav-item > span:first-child { width: 18px; color: #5f6368; text-align: center; }
+.gmail-nav-item > span:nth-child(3) { margin-left: auto; }
+.gmail-nav-item.active { background: var(--gmail-blue-soft); color: #001d35; }
+.gmail-nav-item.active > span:first-child { color: var(--gmail-blue); }
+.gmail-nav-note {
+  display: grid;
+  grid-template-columns: 8px minmax(0, 1fr);
+  align-items: start;
+  gap: 8px;
+  margin: 26px 12px 0 18px;
+  color: #777c83;
+  font-size: 10.5px;
+  line-height: 1.45;
+}
+.gmail-live-dot {
+  width: 7px;
+  height: 7px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: var(--gmail-green);
+  box-shadow: 0 0 0 3px rgba(24,128,56,.11);
+}
+.gmail-message-shell {
+  min-width: 0;
+  min-height: 0;
+  display: grid;
+  grid-template-rows: 48px minmax(0, 1fr);
+  margin: 8px 10px 10px 0;
+  overflow: hidden;
+  border-radius: 16px;
+  background: var(--gmail-surface);
+  box-shadow: 0 1px 3px rgba(60,64,67,.16);
+}
+.gmail-toolbar {
+  gap: 21px;
+  min-width: 0;
+  padding: 0 22px;
+  border-bottom: 1px solid #eef0f3;
+  color: var(--gmail-muted);
+  font-size: 13px;
+}
+.gmail-toolbar i { width: 1px; height: 22px; background: #e4e7eb; }
+.gmail-toolbar-spacer { flex: 1; }
+.gmail-message {
+  min-height: 0;
+  padding: 18px 38px 34px;
+  overflow: auto;
+  scrollbar-width: thin;
+}
+.gmail-proof-strip {
+  gap: 9px;
+  width: fit-content;
+  margin-bottom: 18px;
+  padding: 7px 11px;
+  border-radius: 7px;
+  background: #edf7ee;
+  color: #295e39;
+  font-size: 11px;
+}
+.gmail-proof-strip strong { font-weight: 650; }
+.gmail-proof-strip > span:last-child { color: #597362; }
+.gmail-message-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 22px;
+}
+.gmail-message-title h1 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 400;
+  letter-spacing: -.25px;
+}
+.gmail-inbox-label {
+  padding: 3px 6px;
+  border-radius: 4px;
+  background: #e8eaed;
+  color: #5f6368;
+  font-size: 10px;
+}
+.gmail-sender-row {
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr) 20px 20px 20px;
+  gap: 10px;
+  margin-bottom: 22px;
+}
+.gmail-sender-avatar { width: 40px; height: 40px; font-size: 15px; }
+.gmail-sender-copy { min-width: 0; display: grid; gap: 3px; }
+.gmail-sender-copy strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12.5px; }
+.gmail-sender-copy small,
+.gmail-sender-row time { color: var(--gmail-muted); font-size: 10.5px; }
+.gmail-message-copy {
+  max-width: 760px;
+  padding-left: 50px;
+  color: #303134;
+  font-size: 15.5px;
+  line-height: 1.7;
+}
+.gmail-message-copy p { margin: 0 0 12px; }
+.gmail-message-copy ul { margin: -4px 0 14px; padding-left: 22px; }
+.gmail-message-copy li { margin: 4px 0; }
+.gmail-message-copy code {
+  padding: 2px 5px;
+  border-radius: 4px;
+  background: #f1f3f4;
+  font-family: "SFMono-Regular", Consolas, monospace;
+  font-size: .9em;
+}
+.gmail-message-body-text {
+  white-space: pre-wrap;
+}
+.gmail-readback-proof {
+  position: sticky;
+  z-index: 2;
+  bottom: 0;
+  max-width: 840px;
+  gap: 11px;
+  margin: 28px 0 0 50px;
+  padding: 12px 13px;
+  border: 1px solid #cce8d2;
+  border-radius: 9px;
+  background: #f3faf5;
+  color: #285d38;
+  transition: background 180ms ease, border-color 180ms ease;
+}
+.gmail-readback-check {
+  width: 24px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: var(--gmail-green);
+  color: #fff;
+  font-size: 12px;
+}
+.gmail-readback-proof > span:nth-child(2) { min-width: 0; display: grid; gap: 2px; }
+.gmail-readback-proof strong { font-size: 14.5px; }
+.gmail-readback-proof small { color: #587163; font-size: 13px; }
+.gmail-readback-result {
+  margin-left: auto;
+  padding: 4px 7px;
+  border-radius: 5px;
+  background: #d9efdf;
+  color: #1e6c35;
+  font-size: 13px;
+  font-weight: 650;
+  white-space: nowrap;
+}
+.gmail-web-page[data-readback="2"] .gmail-readback-proof {
+  border-color: #b9dec4;
+  background: #eaf7ee;
+}
+
+/* Presentation readability: sized for a 1500×900 recorded viewport. */
+.accio-window { font-weight: 500; }
+.accio-window strong,
+.accio-window b,
+.accio-window h1,
+.accio-window h2,
+.accio-window h3 { font-weight: 700; }
+
+.studio-controls label > span,
+.control-status { font-size: 13.5px; font-weight: 650; }
+.studio-controls select,
+.studio-controls button { font-size: 15px; font-weight: 650; }
+
+.product-lockup strong { font-size: 16px; font-weight: 750; }
+.conversation-header h1 { font-size: 16px; font-weight: 700; }
+.model-lockup { font-size: 14px; font-weight: 650; }
+.prompt-card > header { font-size: 14px; font-weight: 650; }
+.prompt-path { font-size: 12px; font-weight: 600; }
+.prompt-card .prompt-copy { font-size: 17px; font-weight: 520; line-height: 1.62; }
+
+.prompt-composer .composer-field { font-size: 17px; font-weight: 520; line-height: 1.62; }
+.prompt-composer .composer-field p:has(> strong:only-child),
+.prompt-card .prompt-copy p:has(> strong:only-child) {
+  margin: 12px 0 7px;
+  color: #292b28;
+  font-size: 18px;
+  font-weight: 720;
+  line-height: 1.35;
+}
+.composer-footer { font-size: 14px; font-weight: 650; }
+.composer-plus { font-size: 20px; font-weight: 700; }
+.composer-send { font-weight: 750; }
+
+.narrative-meta { font-size: 14px; font-weight: 800; }
+.narrative-read-time,
+.narrative-count { font-size: 14px; font-weight: 700; }
+.narrative-card h2 { font-size: 34px; font-weight: 760; }
+.narrative-summary { font-size: 20px; font-weight: 540; }
+.narrative-points li { font-size: 19px; font-weight: 540; line-height: 1.5; }
+.narrative-points li::before { font-size: 13px; font-weight: 800; }
+.narrative-badge { font-size: 15px; font-weight: 720; }
+
+.stage-subtitle-meta { font-size: 14px; font-weight: 700; }
+.stage-subtitle-copy strong { font-size: 24px; font-weight: 750; }
+.stage-subtitle-lines { font-size: 18px; font-weight: 540; }
+.stage-subtitle-lines b { font-size: 13px; font-weight: 750; }
+.stage-subtitle-result { font-size: 15px; font-weight: 700; }
+
+.assistant-header { font-size: 15px; font-weight: 650; }
+.assistant-header time { font-size: 12.5px; font-weight: 600; }
+.work-summary { font-size: 14px; font-weight: 650; }
+.activity-row { min-height: 42px; font-size: 14.5px; font-weight: 540; }
+.activity-copy strong { font-weight: 720; }
+.activity-row time { font-size: 12.5px; font-weight: 600; }
+.activity-icon { font-size: 11px; font-weight: 750; }
+.markdown-body { font-size: 17px; font-weight: 520; line-height: 1.66; }
+.markdown-body h1 { font-size: 24px; }
+.markdown-body h2 { font-size: 20px; }
+.markdown-body h3 { font-size: 18px; }
+.markdown-body strong { font-weight: 720; }
+.markdown-body pre { font-size: 13px; font-weight: 520; }
+.artifact-card strong { font-size: 14px; font-weight: 700; }
+.artifact-card small { font-size: 12px; font-weight: 550; }
+.artifact-state { font-size: 12.5px; font-weight: 700; }
+
+.files-header strong { font-size: 15px; font-weight: 750; }
+.workspace-name { font-size: 12.5px; font-weight: 600; }
+.folder-root { font-size: 13px; font-weight: 650; }
+.folder-row { height: 32px; font-size: 13px; font-weight: 600; }
+.tree-state { font-size: 11.5px; font-weight: 700; }
+.file-preview header strong { font-size: 14px; font-weight: 720; }
+.file-preview header small { font-size: 12px; font-weight: 600; }
+.preview-body { font-size: 15px; font-weight: 540; line-height: 1.6; }
+.accio-window.prompt-guided .preview-body { font-size: 15.5px; font-weight: 540; line-height: 1.62; }
+.accio-window.prompt-guided .preview-body h1 { font-size: 19px; }
+.accio-window.prompt-guided .preview-body h2 { font-size: 18px; }
+.accio-window.prompt-guided .preview-body h3 { font-size: 16.5px; }
+.preview-body h1 { font-size: 18px; }
+.preview-body h2 { font-size: 16.5px; }
+.preview-body h3 { font-size: 15px; }
+.preview-body pre { font-size: 12.5px; font-weight: 520; }
+.gmail-receipt-head small,
+.gmail-receipt-live { font-size: 12px; font-weight: 600; }
+.gmail-receipt-head strong { font-size: 14px; font-weight: 720; }
+.receipt-stage-copy strong { font-size: 13px; font-weight: 700; }
+.receipt-stage-copy small { font-size: 11.5px; font-weight: 550; }
+.receipt-stage-value { font-size: 11px; font-weight: 650; }
+.files-footer { font-size: 12px; font-weight: 650; }
+
+.gmail-wordmark strong { font-size: 22px; font-weight: 650; }
+.gmail-search { font-size: 15px; font-weight: 550; }
+.gmail-search code { font-size: 12px; font-weight: 600; }
+.gmail-account { font-size: 13.5px; font-weight: 650; }
+.gmail-compose strong { font-size: 15px; font-weight: 650; }
+.gmail-nav-item { font-size: 14px; font-weight: 550; }
+.gmail-nav-note { font-size: 12px; font-weight: 550; }
+.gmail-toolbar { font-size: 14.5px; font-weight: 600; }
+.gmail-proof-strip { font-size: 13px; font-weight: 600; }
+.gmail-message-title h1 { font-size: 27px; font-weight: 650; }
+.gmail-inbox-label { font-size: 11.5px; font-weight: 650; }
+.gmail-sender-copy strong { font-size: 14.5px; font-weight: 700; }
+.gmail-sender-copy small,
+.gmail-sender-row time { font-size: 12px; font-weight: 550; }
+.gmail-message-copy { font-size: 18px; font-weight: 520; line-height: 1.72; }
+.gmail-readback-proof strong { font-size: 16px; font-weight: 720; }
+.gmail-readback-proof small { font-size: 14px; font-weight: 550; }
+.gmail-readback-result { font-size: 14px; font-weight: 700; }
+
+/* Website typography: retain scale, remove the heavy demo-video weight. */
+.accio-window { font-weight: 400; }
+.accio-window strong,
+.accio-window b,
+.accio-window h1,
+.accio-window h2,
+.accio-window h3 { font-weight: 600; }
+.studio-controls label > span,
+.control-status,
+.studio-controls select,
+.studio-controls button { font-weight: 500; }
+.product-lockup strong,
+.conversation-header h1,
+.model-lockup { font-weight: 600; }
+.prompt-card > header,
+.prompt-path { font-weight: 500; }
+.prompt-card .prompt-copy,
+.prompt-composer .composer-field { font-weight: 400; }
+.prompt-composer .composer-field p:has(> strong:only-child),
+.prompt-card .prompt-copy p:has(> strong:only-child) { font-weight: 600; }
+.composer-footer { font-weight: 500; }
+.composer-plus,
+.composer-send { font-weight: 600; }
+.narrative-meta { font-weight: 600; letter-spacing: .065em; }
+.narrative-read-time,
+.narrative-count { font-weight: 500; }
+.narrative-card h2 { font-weight: 600; letter-spacing: -.55px; }
+.narrative-summary,
+.narrative-points li { font-weight: 400; }
+.narrative-points li::before,
+.narrative-badge { font-weight: 600; }
+.stage-subtitle-meta,
+.stage-subtitle-lines b { font-weight: 600; }
+.stage-subtitle-copy strong { font-weight: 600; }
+.stage-subtitle-lines { font-weight: 400; }
+.stage-subtitle-result { font-weight: 500; }
+.assistant-header { font-weight: 600; }
+.assistant-header time,
+.activity-row,
+.markdown-body { font-weight: 400; }
+.work-summary,
+.activity-row time { font-weight: 500; }
+.activity-copy strong,
+.markdown-body strong,
+.artifact-card strong,
+.artifact-state { font-weight: 600; }
+.activity-icon,
+.artifact-card small { font-weight: 500; }
+.markdown-body pre { font-weight: 400; }
+.files-header strong,
+.file-preview header strong,
+.gmail-receipt-head strong,
+.receipt-stage-copy strong,
+.gmail-wordmark strong,
+.gmail-message-title h1,
+.gmail-sender-copy strong,
+.gmail-readback-proof strong { font-weight: 600; }
+.workspace-name,
+.folder-root,
+.folder-row,
+.tree-state,
+.file-preview header small,
+.preview-body,
+.preview-body pre,
+.gmail-receipt-head small,
+.gmail-receipt-live,
+.receipt-stage-copy small,
+.receipt-stage-value,
+.files-footer,
+.gmail-search,
+.gmail-search code,
+.gmail-account,
+.gmail-compose strong,
+.gmail-nav-item,
+.gmail-nav-note,
+.gmail-toolbar,
+.gmail-proof-strip,
+.gmail-inbox-label,
+.gmail-sender-copy small,
+.gmail-sender-row time,
+.gmail-message-copy,
+.gmail-readback-proof small { font-weight: 400; }
+.gmail-readback-result { font-weight: 500; }
+
+/* Lighter product-site hierarchy, using Inter's variable weights. */
+.accio-window { font-weight: 350; }
+.accio-window strong,
+.accio-window b,
+.accio-window h1,
+.accio-window h2,
+.accio-window h3 { font-weight: 550; }
+.studio-controls label > span,
+.control-status,
+.studio-controls select,
+.studio-controls button,
+.product-lockup strong,
+.conversation-header h1,
+.model-lockup { font-weight: 500; }
+.prompt-card > header,
+.prompt-path,
+.composer-footer { font-weight: 450; }
+.prompt-card .prompt-copy,
+.prompt-composer .composer-field,
+.narrative-summary,
+.narrative-points li,
+.stage-subtitle-lines,
+.activity-row,
+.markdown-body,
+.preview-body,
+.gmail-message-copy { font-weight: 350; }
+.prompt-composer .composer-field p:has(> strong:only-child),
+.prompt-card .prompt-copy p:has(> strong:only-child),
+.narrative-meta,
+.narrative-card h2,
+.stage-subtitle-copy strong,
+.assistant-header,
+.activity-copy strong,
+.markdown-body strong,
+.artifact-card strong,
+.files-header strong,
+.file-preview header strong,
+.gmail-message-title h1,
+.gmail-sender-copy strong,
+.gmail-readback-proof strong { font-weight: 550; }
+.narrative-read-time,
+.narrative-count,
+.narrative-badge,
+.stage-subtitle-meta,
+.stage-subtitle-lines b,
+.stage-subtitle-result,
+.work-summary,
+.activity-row time,
+.activity-icon,
+.artifact-card small,
+.artifact-state,
+.workspace-name,
+.folder-root,
+.folder-row,
+.tree-state,
+.file-preview header small,
+.preview-body pre,
+.gmail-receipt-head small,
+.gmail-receipt-live,
+.receipt-stage-copy small,
+.receipt-stage-value,
+.files-footer,
+.gmail-search,
+.gmail-search code,
+.gmail-account,
+.gmail-compose strong,
+.gmail-nav-item,
+.gmail-nav-note,
+.gmail-toolbar,
+.gmail-proof-strip,
+.gmail-inbox-label,
+.gmail-sender-copy small,
+.gmail-sender-row time,
+.gmail-readback-proof small,
+.gmail-readback-result { font-weight: 450; }
+
+/* Gmail keeps its own Google-product typography instead of inheriting Accio. */
+.gmail-web-page,
+.gmail-web-page button,
+.gmail-web-page input {
+  font-family: "Gmail Roboto", Roboto, Arial, "Helvetica Neue", sans-serif;
+  font-weight: 400;
+  letter-spacing: 0;
+}
+.gmail-web-page strong,
+.gmail-web-page b { font-weight: 500; }
+.gmail-wordmark strong {
+  font-family: "Gmail Roboto", "Google Sans", Roboto, Arial, sans-serif;
+  font-weight: 400;
+}
+.gmail-message-title h1 {
+  font-family: "Gmail Roboto", "Google Sans", Roboto, Arial, sans-serif;
+  font-weight: 400;
+}
+.gmail-search,
+.gmail-account,
+.gmail-compose strong,
+.gmail-nav-item,
+.gmail-nav-note,
+.gmail-toolbar,
+.gmail-proof-strip,
+.gmail-sender-copy small,
+.gmail-sender-row time,
+.gmail-message-copy,
+.gmail-readback-proof small { font-weight: 400; }
+.gmail-sender-copy strong,
+.gmail-readback-proof strong,
+.gmail-readback-result { font-weight: 500; }
+.gmail-web-page code {
+  font-family: "Roboto Mono", "SFMono-Regular", Consolas, monospace;
+  font-weight: 400;
+}
+
+/* Final product typography: soft Inter body copy with restrained display weights. */
+.accio-window {
+  letter-spacing: -.004em;
+}
+.product-lockup strong,
+.conversation-header h1,
+.model-lockup {
+  font-weight: 520;
+  letter-spacing: -.012em;
+}
+.prompt-composer .composer-field,
+.prompt-card .prompt-copy {
+  color: #30332f;
+  font-size: 18px;
+  font-weight: 380;
+  line-height: 1.62;
+  letter-spacing: -.008em;
+}
+.prompt-composer .composer-field p:has(> strong:only-child),
+.prompt-card .prompt-copy p:has(> strong:only-child) {
+  margin: 14px 0 8px;
+  color: #20231f;
+  font-size: 18.5px;
+  font-weight: 540;
+  line-height: 1.38;
+  letter-spacing: -.018em;
+}
+.composer-footer {
+  font-size: 13px;
+  font-weight: 430;
+  letter-spacing: 0;
+}
+.narrative-meta {
+  font-weight: 520;
+  letter-spacing: .055em;
+}
+.narrative-read-time,
+.narrative-count {
+  font-weight: 430;
+}
+.narrative-card h2 {
+  font-weight: 540;
+  letter-spacing: -.027em;
+}
+.narrative-summary,
+.narrative-points li {
+  font-weight: 380;
+  letter-spacing: -.008em;
+}
+.narrative-badge {
+  font-weight: 520;
+  letter-spacing: -.004em;
+}
+.assistant-header,
+.activity-copy strong,
+.markdown-body strong,
+.artifact-card strong,
+.files-header strong,
+.file-preview header strong {
+  font-weight: 520;
+}
+.activity-row,
+.markdown-body,
+.preview-body {
+  font-weight: 380;
+  letter-spacing: -.006em;
+}
+.stage-subtitle-copy strong {
+  font-weight: 540;
+  letter-spacing: -.018em;
+}
+.stage-subtitle-lines {
+  font-weight: 380;
+  letter-spacing: -.004em;
+}
+
+/* Embedded-site scale: the replay was originally tuned for a full-screen
+   recording. Reduce it one step so it supports the report without crowding it. */
+.prompt-card > header { font-size: 12.5px; }
+.prompt-path { font-size: 10.5px; }
+.prompt-composer .composer-field,
+.prompt-card .prompt-copy {
+  font-size: 16px;
+  line-height: 1.58;
+}
+.prompt-composer .composer-field p:has(> strong:only-child),
+.prompt-card .prompt-copy p:has(> strong:only-child) { font-size: 16.5px; }
+.narrative-card h2 { font-size: 30px; }
+.narrative-summary { font-size: 17.5px; }
+.narrative-points li { font-size: 16.5px; }
+.stage-subtitle-copy strong { font-size: 21px; }
+.stage-subtitle-lines { font-size: 15.5px; }
+.activity-stage > strong { font-size: 17.5px; }
+.assistant-header { font-size: 13.5px; }
+.activity-row { font-size: 13px; min-height: 38px; }
+.activity-copy strong { font-size: 13px; }
+.activity-result { font-size: 11px; }
+.markdown-body { font-size: 15px; line-height: 1.62; }
+.markdown-body h1 { font-size: 21px; }
+.markdown-body h2 { font-size: 18px; }
+.markdown-body h3 { font-size: 16px; }
+.preview-body { font-size: 13.5px; }
+.gmail-message-title h1 { font-size: 24px; }
+.gmail-message-copy { font-size: 16px; }
+.gmail-readback-proof strong { font-size: 14.5px; }
+.gmail-readback-proof small { font-size: 12.5px; }
+
+@media (max-width: 1240px) {
+  .accio-window { grid-template-columns: minmax(0, 1fr) 370px; }
+  .conversation-column { width: min(740px, calc(100% - 48px)); }
+  .conversation-header { grid-template-columns: 145px minmax(0, 1fr) 135px; padding: 0 18px; }
+  .team-credit { display: none; }
+  .gmail-web-header { grid-template-columns: 190px minmax(320px, 1fr) 170px; }
+  .gmail-web-body { grid-template-columns: 190px minmax(0, 1fr); }
+  .gmail-message { padding-right: 28px; padding-left: 28px; }
+}
+
+@media (max-height: 720px) {
+  .stage-subtitle {
+    right: 16px;
+    bottom: 16px;
+    left: 16px;
+    min-height: 0;
+    grid-template-columns: 44px minmax(0, 1fr);
+    padding: 14px 16px;
+  }
+  .stage-subtitle-icon { width: 44px; height: 44px; }
+  .stage-subtitle-copy strong { font-size: 18px; }
+  .stage-subtitle-lines { font-size: 14px; }
+  .stage-subtitle-result { grid-column: 2; justify-self: start; }
+}
+
+@media (max-width: 980px) {
+  .accio-window { grid-template-columns: minmax(0, 1fr) 330px; }
+  .conversation-column { width: calc(100% - 36px); }
+  .product-lockup strong { display: none; }
+  .conversation-header { grid-template-columns: 34px minmax(0, 1fr) 130px; gap: 10px; padding: 0 14px; }
+  .gmail-web-header { grid-template-columns: 155px minmax(260px, 1fr) 145px; gap: 10px; padding: 0 14px; }
+  .gmail-web-body { grid-template-columns: 165px minmax(0, 1fr); }
+  .gmail-account > span:first-child { display: none; }
+  .gmail-message-copy { padding-left: 0; }
+  .gmail-readback-proof { margin-left: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+}

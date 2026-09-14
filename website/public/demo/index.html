@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#f4f1e8" />
+  <title>Accio Work — Occamy</title>
+  <link rel="stylesheet" href="studio.css?v=63" />
+  <link rel="stylesheet" href="occamy-theme.css?v=63" />
+</head>
+<body>
+  <div class="studio-controls" id="studioControls" aria-label="Replay controls">
+    <label class="single-task-control"><span>Task</span><select id="taskPicker"><option value="onboarding">Onboarding</option><option value="recruiting">Recruiting + Gmail</option><option value="restock">Restock analysis</option></select></label>
+    <label><span>Speed</span><select id="speedPicker"><option value="1">1×</option><option value="2">2×</option><option value="4">4×</option><option value="12">QA</option></select></label>
+    <button id="playButton" type="button">Play</button>
+    <button id="resetButton" type="button">Reset</button>
+    <button id="recordButton" type="button" class="record-button">Record tab</button>
+    <span class="control-status" id="controlStatus">Ready</span>
+  </div>
+
+  <main class="accio-window" id="accioWindow" data-replay-state="idle">
+    <nav class="mobile-view-switcher" id="mobileViewSwitcher" aria-label="Replay view">
+      <button type="button" data-mobile-view="work" aria-selected="true">Work</button>
+      <button type="button" data-mobile-view="artifacts" aria-selected="false">Artifacts</button>
+    </nav>
+    <section class="conversation-shell">
+      <header class="conversation-header" id="conversationHeader">
+        <div class="product-lockup" aria-label="Accio Work by Accio Team"><span class="accio-mark">A</span><strong>Accio Work</strong><span class="team-credit">Accio Team</span></div>
+        <h1 id="conversationTitle">Accio Work replay</h1>
+        <div class="model-lockup"><span class="model-dot"></span><strong id="modelName">Occamy</strong></div>
+      </header>
+
+      <div class="conversation-scroll" id="conversationScroll">
+        <div class="conversation-column">
+          <section class="prompt-card entrance" id="userMessage" aria-label="User task prompt">
+            <header><span class="prompt-kicker" id="promptKicker">Task prompt</span><span class="prompt-path" id="promptPath">/workspace</span></header>
+            <article class="prompt-copy markdown-body" id="promptCopy"></article>
+          </section>
+
+          <section class="assistant-message" id="assistantMessage" aria-live="polite">
+            <header class="assistant-header"><span class="assistant-avatar">A</span><strong>Accio Assistant</strong><time id="assistantTime">13:43:43</time></header>
+            <div class="work-summary is-working" id="workSummary"><span class="summary-icon">▱</span><span id="workSummaryText">Working…</span></div>
+            <div class="activity-log" id="activityLog" aria-label="Tool trajectory"></div>
+            <article class="assistant-answer markdown-body" id="assistantAnswer"></article>
+            <div class="artifact-cards" id="artifactCards"></div>
+          </section>
+        </div>
+      </div>
+
+      <section class="prompt-composer" id="promptComposer" aria-label="Task prompt composer" aria-hidden="false">
+        <div class="composer-shell">
+          <div class="composer-field markdown-body" id="composerText" aria-live="polite"></div>
+          <footer class="composer-footer">
+            <span class="composer-context" id="composerContext"><span class="composer-plus">+</span> Accio Work · Files + Gmail</span>
+            <button class="composer-send" id="composerSend" type="button" tabindex="-1" aria-label="Send prompt"><span>↑</span></button>
+          </footer>
+        </div>
+      </section>
+
+    </section>
+
+    <aside class="files-pane" id="filesPane" aria-label="Workspace files">
+      <header class="files-header"><div><span class="folder-glyph">▱</span><strong>Files</strong></div><span class="workspace-name" id="workspaceName">workspace</span></header>
+      <nav class="pane-tabs" id="paneTabs" role="tablist" aria-label="Files and artifact preview">
+        <button id="filesTab" type="button" role="tab" aria-selected="true" aria-controls="folderSection">Files</button>
+        <button id="artifactTab" type="button" role="tab" aria-selected="false" aria-controls="filePreview" disabled>Artifact</button>
+      </nav>
+      <div class="viewer-stack">
+        <section class="folder-section viewer-panel active" id="folderSection" role="tabpanel" aria-labelledby="filesTab" aria-label="Folder tree">
+          <div class="folder-root"><span>⌄</span><strong id="folderRoot">/workspace</strong></div>
+          <div class="folder-tree" id="folderTree"></div>
+        </section>
+        <section class="file-preview viewer-panel" id="filePreview" role="tabpanel" aria-labelledby="artifactTab" aria-live="polite" aria-label="Artifact preview">
+          <header class="artifact-toolbar">
+            <span class="preview-file-icon" id="previewFileIcon">▤</span>
+            <span class="preview-heading"><strong id="previewTitle">No file selected</strong><small id="previewSubtitle">Workspace preview</small></span>
+            <nav class="preview-mode-tabs" id="previewModeTabs" aria-label="Artifact display mode">
+              <button id="renderedMode" type="button" data-preview-mode="rendered" aria-selected="true">Rendered</button>
+              <button id="sourceMode" type="button" data-preview-mode="source" aria-selected="false">Source</button>
+            </nav>
+          </header>
+          <div class="artifact-meta"><span id="previewMetrics">Select an artifact to inspect it</span><button id="wrapToggle" type="button" aria-pressed="false">Wrap off</button></div>
+          <div class="preview-body" id="previewBody"></div>
+        </section>
+      </div>
+      <footer class="files-footer"><span class="verified-dot"></span><span id="validationStatus">Replay data pending</span><span class="footer-model" id="footerModel">Occamy</span></footer>
+    </aside>
+
+    <section class="narrative-intro" id="narrativeIntro" aria-live="polite" aria-hidden="true">
+      <article class="narrative-card">
+        <header class="narrative-header">
+          <span class="narrative-meta" id="narrativeMeta">Prompt · what the user asked</span>
+          <span class="narrative-read-time" id="narrativeReadTime">12 sec read</span>
+        </header>
+        <h2 id="narrativeTitle">Clean candidate records without losing source data</h2>
+        <p class="narrative-summary" id="narrativeSummary">Use real Files and Gmail tools in a fresh workspace; every result must be observable, never simulated.</p>
+        <ol class="narrative-points" id="narrativePoints"></ol>
+        <footer class="narrative-footer">
+          <span class="narrative-badge" id="narrativeBadge">PASS only after every final artifact is reopened</span>
+          <span class="narrative-count" id="narrativeCount">1 / 3</span>
+        </footer>
+        <span class="narrative-progress" aria-hidden="true"><i id="narrativeProgress"></i></span>
+      </article>
+    </section>
+
+    <section class="external-web-page github-web-page" id="githubWebPage" aria-label="GitHub repository inspection" aria-hidden="true" data-phase="0">
+      <header class="external-browser-bar">
+        <span class="browser-dots" aria-hidden="true"><i></i><i></i><i></i></span>
+        <code>github.com/ggml-org/whisper.cpp</code>
+        <span class="browser-mode">Connected GitHub · read only</span>
+      </header>
+      <div class="github-site-bar">
+        <svg class="github-logo" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 .7a11.5 11.5 0 0 0-3.64 22.4c.58.1.79-.25.79-.56v-2.23c-3.23.7-3.91-1.37-3.91-1.37-.53-1.34-1.29-1.7-1.29-1.7-1.05-.72.08-.71.08-.71 1.17.08 1.78 1.2 1.78 1.2 1.04 1.78 2.72 1.27 3.38.97.1-.75.41-1.27.74-1.56-2.58-.29-5.29-1.29-5.29-5.68 0-1.26.45-2.28 1.19-3.09-.12-.29-.52-1.47.11-3.05 0 0 .97-.31 3.16 1.18A10.9 10.9 0 0 1 12 6.11c.98 0 1.95.13 2.87.39 2.2-1.49 3.16-1.18 3.16-1.18.63 1.58.23 2.76.11 3.05.74.81 1.19 1.83 1.19 3.09 0 4.4-2.72 5.38-5.31 5.67.42.36.79 1.07.79 2.16v3.2c0 .31.21.67.8.56A11.5 11.5 0 0 0 12 .7Z"/></svg>
+        <div class="github-search">Search or jump to…</div>
+        <nav><span>Pull requests</span><span>Issues</span><span>Marketplace</span><span>Explore</span></nav>
+      </div>
+      <main class="github-repo-shell">
+        <header class="github-repo-title"><span><b>ggml-org</b> / <strong>whisper.cpp</strong></span><em>Public</em><div><span class="github-action">☆ Star</span><span class="github-action">⑂ Fork</span></div></header>
+        <nav class="github-repo-tabs"><span class="active">Code</span><span>Issues</span><span>Pull requests</span><span>Actions</span><span>Security</span><span>Insights</span></nav>
+        <div class="github-repo-grid">
+          <article class="github-readme">
+            <div class="github-file-row"><span>main</span><strong>README.md</strong><small>High-performance inference of OpenAI's Whisper</small></div>
+            <div class="github-readme-body">
+              <h1>whisper.cpp</h1>
+              <p>Port of OpenAI's Whisper model in C/C++.</p>
+              <h2>High-performance speech recognition</h2>
+              <ul><li>Plain C/C++ implementation</li><li>CPU and GPU inference</li><li>Canonical owner: <code>ggml-org</code></li></ul>
+            </div>
+          </article>
+          <aside class="github-about"><h3>About</h3><p>High-performance inference of OpenAI's Whisper automatic speech recognition model.</p><dl><dt>Primary language</dt><dd>C++</dd><dt>Canonical URL</dt><dd>ggml-org/whisper.cpp</dd><dt>Adjacent project</dt><dd>llama.cpp · LLM inference</dd></dl></aside>
+        </div>
+      </main>
+      <footer class="external-web-proof github-proof"><span>01</span><strong id="githubWebTitle">Canonical redirect resolved</strong><small id="githubWebDetail">The historical repository path resolves to ggml-org/whisper.cpp.</small><b id="githubWebResult">Source identity</b></footer>
+    </section>
+
+    <section class="external-web-page hf-web-page" id="hfWebPage" aria-label="Hugging Face connector inspection" aria-hidden="true" data-phase="0">
+      <header class="external-browser-bar">
+        <span class="browser-dots" aria-hidden="true"><i></i><i></i><i></i></span>
+        <code>huggingface.co/Accio-Lab/Occamy-1.0</code>
+        <span class="browser-mode">Release-readiness check</span>
+      </header>
+      <div class="hf-site-bar"><span class="hf-logo" aria-hidden="true">🤗</span><strong>Hugging Face</strong><div class="hf-search">Search models, datasets, users…</div><nav><span>Models</span><span>Datasets</span><span>Spaces</span><span>Docs</span></nav></div>
+      <main class="hf-model-shell">
+        <header class="hf-model-title"><div><span>Accio-Lab /</span><h1>Occamy-1.0</h1></div><em>Model card</em></header>
+        <nav class="hf-model-tabs"><span class="active">Model card</span><span>Files and versions</span><span>Community</span></nav>
+        <div class="hf-model-grid">
+          <article class="hf-model-card">
+            <div class="hf-connector-state"><span class="hf-state-icon">!</span><div><small>Connected Hugging Face tool</small><strong id="hfStateTitle">Connector unavailable</strong></div><code id="hfStateCode">stream idle timeout</code></div>
+            <h2>Occamy-1.0</h2><p>A 35B-A3B co-work model trained for persistent state tracking, disciplined tool use, recovery, and reliable follow-through.</p>
+            <div class="hf-metadata"><span>35B-A3B</span><span>Qwen3.6 base</span><span>Safetensors</span><span>English</span></div>
+            <section class="hf-provenance"><small>Provenance boundary</small><strong id="hfProvenanceTitle">Connected model metadata is still required</strong><p id="hfProvenanceDetail">No public-page field is promoted to connector-verified evidence.</p></section>
+          </article>
+          <aside class="hf-files"><h3>Local release inventory</h3><ul><li><span>config.json</span><b>available</b></li><li><span>model.safetensors.index.json</span><b>available</b></li><li><span>serving_manifest.json</span><b>available</b></li></ul><p>Local files remain a separate provenance lane from model-hub metadata.</p></aside>
+        </div>
+      </main>
+      <footer class="external-web-proof hf-proof"><span>03</span><strong id="hfWebTitle">Connector failure remains visible</strong><small id="hfWebDetail">The run records the failed connected lookup before considering a fallback.</small><b id="hfWebResult">Not verified</b></footer>
+    </section>
+
+    <section class="gmail-web-page" id="gmailWebPage" aria-label="Connected Gmail message" aria-hidden="true" data-readback="0">
+      <header class="gmail-web-header">
+        <div class="gmail-wordmark"><span class="gmail-menu" aria-hidden="true">☰</span><span class="gmail-mark" aria-hidden="true">M</span><strong>Gmail</strong></div>
+        <div class="gmail-search"><span aria-hidden="true">⌕</span><span>Search mail</span><code id="gmailSearchQuery">Exact-subject result</code></div>
+        <div class="gmail-account"><span>Connected Gmail</span><span class="gmail-account-avatar">D</span></div>
+      </header>
+
+      <div class="gmail-web-body">
+        <nav class="gmail-nav" aria-label="Gmail folders">
+          <div class="gmail-compose"><span aria-hidden="true">✎</span><strong>Compose</strong></div>
+          <div class="gmail-nav-item active"><span aria-hidden="true">▣</span><strong>Inbox</strong></div>
+          <div class="gmail-nav-item"><span aria-hidden="true">☆</span><span>Starred</span></div>
+          <div class="gmail-nav-item"><span aria-hidden="true">◷</span><span>Snoozed</span></div>
+          <div class="gmail-nav-item"><span aria-hidden="true">➤</span><span>Sent</span></div>
+          <div class="gmail-nav-item"><span aria-hidden="true">▤</span><span>Drafts</span></div>
+          <div class="gmail-nav-item"><span aria-hidden="true">⌄</span><span>More</span></div>
+          <div class="gmail-nav-note"><span class="gmail-live-dot"></span><span>Sanitized replay of the connected account</span></div>
+        </nav>
+
+        <section class="gmail-message-shell" aria-label="Sanitized Gmail message detail">
+          <div class="gmail-toolbar" aria-hidden="true">
+            <span>←</span><span>▣</span><span>!</span><span>⌫</span><i></i><span>◷</span><span>▱</span><span>⋮</span>
+            <span class="gmail-toolbar-spacer"></span><span>Exact-subject result</span><span>‹</span><span>›</span>
+          </div>
+
+          <article class="gmail-message">
+            <div class="gmail-proof-strip"><span class="gmail-live-dot"></span><strong>Verified Gmail send</strong><span id="gmailProofId">Sanitized receipt</span></div>
+            <header class="gmail-message-title">
+              <h1 id="gmailMessageSubject">Loading verified subject…</h1>
+              <span class="gmail-inbox-label">Exact subject</span>
+            </header>
+            <div class="gmail-sender-row">
+              <span class="gmail-sender-avatar">D</span>
+              <span class="gmail-sender-copy"><strong id="gmailSenderFrom">Loading sender…</strong><small id="gmailSenderTo">Loading recipient…</small></span>
+              <span aria-hidden="true">☆</span>
+              <span aria-hidden="true">↩</span>
+              <span aria-hidden="true">⋮</span>
+            </div>
+            <div class="gmail-message-copy gmail-message-body-text" id="gmailMessageBody">Loading the verified sent message…</div>
+            <footer class="gmail-readback-proof">
+              <span class="gmail-readback-check">✓</span>
+              <span><strong id="gmailReadbackLabel">Send verified</strong><small id="gmailReadbackDetail">Recipient, subject, and body match the requested notification.</small></span>
+              <span class="gmail-readback-result" id="gmailReadbackResult">Verified</span>
+            </footer>
+            <section class="gmail-trajectory-receipt" aria-label="Observable Gmail tool trajectory">
+              <header><span>Connected Gmail receipt</span><strong>Verified Gmail send</strong></header>
+              <ol>
+                <li><span>01</span><strong>Pre-search</strong><small>0 exact matches</small></li>
+                <li><span>02</span><strong>Send once</strong><small>MSG-001 · no retry</small></li>
+                <li><span>03</span><strong>Post-search</strong><small>1 match · same ID</small></li>
+                <li><span>04</span><strong>Send verified</strong><small>recipient + body match</small></li>
+              </ol>
+            </section>
+          </article>
+        </section>
+      </div>
+    </section>
+
+    <section class="stage-subtitle" id="stageSubtitle" aria-live="polite" aria-hidden="true">
+      <span class="stage-subtitle-icon" id="stageSubtitleIcon" aria-hidden="true">M</span>
+      <span class="stage-subtitle-copy">
+        <span class="stage-subtitle-meta" id="stageSubtitleMeta">Gmail · step 1 of 5</span>
+        <strong id="stageSubtitleTitle">Check before sending</strong>
+        <span class="stage-subtitle-lines">
+          <span><b>Operation</b><span id="stageSubtitleOperation">search_gmail_messages · exact-subject query</span></span>
+          <span><b>Verification</b><span id="stageSubtitleBody">The exact-subject search returned zero messages.</span></span>
+          <span><b>Why it matters</b><span id="stageSubtitleMeaning">The notification does not already exist, so one send is safe.</span></span>
+        </span>
+      </span>
+      <span class="stage-subtitle-result" id="stageSubtitleResult">0 before send</span>
+    </section>
+  </main>
+
+  <script src="real-recruiting-replay-data.js?v=63"></script>
+  <script src="studio.js?v=63"></script>
+</body>
+</html>

@@ -1,0 +1,5 @@
+website/node_modules/
+website/pages-dist/
+website/dist/
+website/.next/
+website/.wrangler/
