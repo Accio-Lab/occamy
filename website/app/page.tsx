@@ -2,7 +2,7 @@
 
 /* Static paper figures are shipped as already-optimized public assets. */
 /* eslint-disable @next/next/no-img-element */
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 const SITE_BASE = (import.meta as unknown as { env?: { BASE_URL?: string } }).env?.BASE_URL ?? "/";
 const sitePath = (path: string) => `${SITE_BASE}${path.replace(/^\//, "")}`;
@@ -502,130 +502,9 @@ export function OccamySite({ view = "home" }: { view?: SiteView }) {
   const activeTrajectory = trajectoryDemos.find((trajectory) => trajectory.id === activeTrajectoryId) ?? trajectoryDemos[0];
   const tx = (value: string) => locale === "zh" ? (zh[value] ?? value) : value;
 
-  useEffect(() => {
-    const root = document.documentElement;
-    const revealSelectors = [
-      ".results-head", ".results-table-wrap", ".results-note",
-      ".research-map", ".data-corpus-card",
-      ".section-intro", ".capability-table-wrap", ".compact-glossary",
-      ".continuity-copy", ".segment-visual", ".paper-figure",
-      ".audit-heading", ".audit-table-wrap", ".synthesis-copy",
-      ".infrastructure-head", ".replay-matrix", ".case-head",
-      ".case-tabs", ".case-canvas", ".case-caveat",
-      ".trajectory-section-head", ".trajectory-tabs", ".trajectory-context",
-      ".trajectory-receipt-grid", ".interactive-replay-shell", ".trajectory-evidence-note",
-      ".efficiency-frontier", ".game-demo-head", ".game-demo-stage", ".game-demo-notes",
-      ".training-table-wrap", ".training-evidence-single", ".audit-implications", ".release-copy",
-      ".resource-links", ".honesty-note",
-    ];
-    const nodes = Array.from(document.querySelectorAll<HTMLElement>(revealSelectors.join(",")));
-    root.classList.add("js-motion");
-    nodes.forEach((node) => node.classList.add("scroll-reveal"));
-
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach((entry) => {
-        if (!entry.isIntersecting) return;
-        entry.target.classList.add("is-visible");
-        observer.unobserve(entry.target);
-      });
-    }, { threshold: 0.12, rootMargin: "0px 0px -7% 0px" });
-    nodes.forEach((node) => observer.observe(node));
-
-    let frame = 0;
-    let pointerFrame = 0;
-    let pointerX = 0;
-    let pointerY = 0;
-    let scrollMix = 0;
-    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const applyPalette = () => {
-      const effectiveX = reducedMotion.matches ? 0 : pointerX;
-      const effectiveScroll = reducedMotion.matches ? 0 : scrollMix;
-      const east = (effectiveX + 1) / 2;
-      const center = 1 - Math.abs(effectiveX);
-      root.style.setProperty("--hero-mint-alpha", String(0.14 + (1 - east) * 0.14 - effectiveScroll * 0.03));
-      root.style.setProperty("--hero-sky-alpha", String(0.12 + east * 0.15 + effectiveScroll * 0.05));
-      root.style.setProperty("--hero-aqua-alpha", String(0.12 + center * 0.1));
-      root.style.setProperty("--header-mint-alpha", String(0.045 + (1 - east) * 0.07));
-      root.style.setProperty("--header-sky-alpha", String(0.04 + east * 0.07 + effectiveScroll * 0.02));
-      root.style.setProperty("--section-mint-alpha", String(0.06 + (1 - east) * 0.06));
-      root.style.setProperty("--section-sky-alpha", String(0.055 + east * 0.06 + effectiveScroll * 0.025));
-    };
-    const updateProgress = () => {
-      frame = 0;
-      const distance = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
-      const scrollPhase = window.scrollY / 560;
-      scrollMix = reducedMotion.matches ? 0.5 : (Math.sin(scrollPhase * 0.86) + 1) / 2;
-      root.style.setProperty("--page-progress", String(Math.min(1, Math.max(0, window.scrollY / distance))));
-      root.style.setProperty("--ambient-scroll", `${reducedMotion.matches ? 0 : Math.sin(scrollPhase) * 48}px`);
-      root.style.setProperty("--ambient-scroll-soft", `${reducedMotion.matches ? 0 : Math.cos(scrollPhase * 0.74) * 28}px`);
-      root.style.setProperty("--ambient-scroll-x", `${reducedMotion.matches ? 0 : Math.sin(scrollPhase * 0.61) * 42}px`);
-      applyPalette();
-    };
-    const onScroll = () => {
-      if (!frame) frame = window.requestAnimationFrame(updateProgress);
-    };
-    const updatePointer = () => {
-      pointerFrame = 0;
-      root.style.setProperty("--cursor-x", `${pointerX * 22}px`);
-      root.style.setProperty("--cursor-y", `${pointerY * 16}px`);
-      root.style.setProperty("--cursor-x-soft", `${pointerX * 9}px`);
-      root.style.setProperty("--cursor-y-soft", `${pointerY * 7}px`);
-      root.style.setProperty("--cursor-x-back", `${pointerX * -12}px`);
-      root.style.setProperty("--cursor-y-back", `${pointerY * -7}px`);
-      applyPalette();
-    };
-    const onPointerMove = (event: PointerEvent) => {
-      if (reducedMotion.matches || event.pointerType === "touch") return;
-      pointerX = (event.clientX / Math.max(1, window.innerWidth) - 0.5) * 2;
-      pointerY = (event.clientY / Math.max(1, window.innerHeight) - 0.5) * 2;
-      if (!pointerFrame) pointerFrame = window.requestAnimationFrame(updatePointer);
-    };
-    const resetPointer = () => {
-      pointerX = 0;
-      pointerY = 0;
-      if (!pointerFrame) pointerFrame = window.requestAnimationFrame(updatePointer);
-    };
-    updateProgress();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("resize", onScroll, { passive: true });
-    window.addEventListener("pointermove", onPointerMove, { passive: true });
-    window.addEventListener("blur", resetPointer);
-    document.documentElement.addEventListener("mouseleave", resetPointer);
-
-    return () => {
-      observer.disconnect();
-      if (frame) window.cancelAnimationFrame(frame);
-      if (pointerFrame) window.cancelAnimationFrame(pointerFrame);
-      window.removeEventListener("scroll", onScroll);
-      window.removeEventListener("resize", onScroll);
-      window.removeEventListener("pointermove", onPointerMove);
-      window.removeEventListener("blur", resetPointer);
-      document.documentElement.removeEventListener("mouseleave", resetPointer);
-      nodes.forEach((node) => node.classList.remove("scroll-reveal", "is-visible"));
-      root.classList.remove("js-motion");
-      root.style.removeProperty("--page-progress");
-      root.style.removeProperty("--ambient-scroll");
-      root.style.removeProperty("--ambient-scroll-soft");
-      root.style.removeProperty("--ambient-scroll-x");
-      root.style.removeProperty("--cursor-x");
-      root.style.removeProperty("--cursor-y");
-      root.style.removeProperty("--cursor-x-soft");
-      root.style.removeProperty("--cursor-y-soft");
-      root.style.removeProperty("--cursor-x-back");
-      root.style.removeProperty("--cursor-y-back");
-      root.style.removeProperty("--hero-mint-alpha");
-      root.style.removeProperty("--hero-sky-alpha");
-      root.style.removeProperty("--hero-aqua-alpha");
-      root.style.removeProperty("--header-mint-alpha");
-      root.style.removeProperty("--header-sky-alpha");
-      root.style.removeProperty("--section-mint-alpha");
-      root.style.removeProperty("--section-sky-alpha");
-    };
-  }, []);
 
   return (
     <main className={`site-view ${view}-view`}>
-      <div className="scroll-progress" aria-hidden="true"><i /></div>
       <section className="research-page-intro" id="method-top">
         <div>
           <p className="eyebrow"><span className="eyebrow-dot" />{locale === "zh" ? "方法 · 数据 / 训练 / 基础设施" : "METHOD · DATA / TRAINING / INFRASTRUCTURE"}</p>
@@ -642,36 +521,31 @@ export function OccamySite({ view = "home" }: { view?: SiteView }) {
       </section>
 
       <section className="hero" id="home-top">
-        <div className="hero-orb hero-orb-one" aria-hidden="true" />
-        <div className="hero-orb hero-orb-two" aria-hidden="true" />
-
         <div className="hero-copy">
           <div className="hero-accio-logo"><img src={sitePath("brand/accio.svg")} alt="Accio" /></div>
           <h1><span className="hero-occamy-wordmark"><img src={sitePath("brand/occamy.png")} alt="O" /><span>ccamy-1.0</span></span></h1>
           <p className="hero-subtitle">Open Pareto-frontier 35B Intelligence for Co-work</p>
           <p className="hero-deck">A cost-efficient co-work model, further trained from Qwen3.6-35B-A3B to gather information, use tools, write code, and manage files across long workflows.</p>
-          <div className="hero-actions">
-            <a className="button button-primary" href="#trajectory">
-              Watch trajectories <span className="button-arrow" aria-hidden="true">→</span>
-            </a>
-            <a className="button button-secondary" href="#results">View benchmark results</a>
-          </div>
           <div className="hero-facts" aria-label="Model and research links">
             <a className="hero-resource-link resource-report" href="https://arxiv.org/pdf/2609.11977" target="_blank" rel="noreferrer" aria-label="Read the technical report on arXiv">
               <span className="resource-mark">arXiv</span>
-              <span className="fact-copy"><span className="fact-label">Technical report</span><strong>Read report</strong></span>
+              <strong>Technical report</strong>
               <span className="resource-arrow" aria-hidden="true">↗</span>
             </a>
             <a className="hero-resource-link" href="https://huggingface.co/Accio-Lab/Occamy-1.0" target="_blank" rel="noreferrer">
               <ToolIcon name="Hugging Face" />
-              <span className="fact-copy"><span className="fact-label">Model</span><strong>Hugging Face</strong></span>
+              <strong>Hugging Face</strong>
               <span className="resource-arrow" aria-hidden="true">↗</span>
             </a>
             <a className="hero-resource-link" href="https://github.com/Accio-Lab/occamy" target="_blank" rel="noreferrer">
               <ToolIcon name="GitHub" />
-              <span className="fact-copy"><span className="fact-label">Code</span><strong>GitHub</strong></span>
+              <strong>GitHub</strong>
               <span className="resource-arrow" aria-hidden="true">↗</span>
             </a>
+          </div>
+          <div className="hero-actions">
+            <a className="button button-primary" href="#trajectory">Watch trajectories <span aria-hidden="true">→</span></a>
+            <a className="button button-secondary" href="#results">View benchmark results</a>
           </div>
         </div>
       </section>
@@ -715,26 +589,28 @@ export function OccamySite({ view = "home" }: { view?: SiteView }) {
       <section className="results-section" id="results">
         <figure className="paper-main-results" aria-labelledby="paper-main-results-title">
           <div className="paper-main-results-head">
-            <span>REPORT MAIN RESULTS</span>
-            <h3 id="paper-main-results-title">Occamy across co-work and supporting agentic tasks.</h3>
+            <h2 id="paper-main-results-title">Benchmark results</h2>
           </div>
-          <img src={sitePath("assets/occamy-main-results-10.svg?v=transparent-1")} alt="Main Occamy-1.0 benchmark results" loading="eager" decoding="async" />
+          <div className="figure-scroll" role="region" aria-label="Benchmark results chart" tabIndex={0}>
+            <img src={sitePath("assets/occamy-main-results-10.svg?v=transparent-1")} alt="Main Occamy-1.0 benchmark results" loading="eager" decoding="async" />
+          </div>
         </figure>
 
         <figure className="efficiency-frontier" aria-labelledby="efficiency-frontier-title">
           <div className="efficiency-frontier-head">
             <div>
-              <span>EFFICIENCY FRONTIER</span>
-              <h3 id="efficiency-frontier-title">Aggregate cost–performance across four benchmarks.</h3>
+              <h2 id="efficiency-frontier-title">Performance and cost</h2>
             </div>
           </div>
-          <img src={sitePath("assets/efficiency-frontier.svg")} alt="Pareto frontier comparing normalized aggregate benchmark score and aggregate inference cost per task across ten models" loading="eager" decoding="async" />
+          <div className="figure-scroll" role="region" aria-label="Performance and cost chart" tabIndex={0}>
+            <img src={sitePath("assets/efficiency-frontier.svg")} alt="Pareto frontier comparing normalized aggregate benchmark score and aggregate inference cost per task across ten models" loading="eager" decoding="async" />
+          </div>
           <figcaption>Scores are min–max normalized within each benchmark and averaged equally. Cost is computed per task inside each benchmark, then averaged equally across Claw-Eval, WildClawBench, AutomationBench, and GDPval.</figcaption>
         </figure>
 
-        <article className="paper-table-card comparison-table-card">
-          <div className="paper-table-head"><span>FULL TABLE</span><h3>Comparable and frontier-model results</h3></div>
-          <div className="results-table-wrap model-comparison-wrap">
+        <details className="comparison-table-card">
+          <summary className="paper-table-head">Full benchmark table</summary>
+          <div className="results-table-wrap model-comparison-wrap" role="region" aria-label="Full benchmark comparison" tabIndex={0}>
             <table className="results-table model-comparison-table">
               <thead>
                 <tr>
@@ -755,7 +631,7 @@ export function OccamySite({ view = "home" }: { view?: SiteView }) {
               ))}
             </table>
           </div>
-        </article>
+        </details>
 
       </section>
 
@@ -874,8 +750,7 @@ export function OccamySite({ view = "home" }: { view?: SiteView }) {
       <section className="trajectory-section" id="trajectory">
         <div className="trajectory-section-head">
           <div>
-            <p className="section-index section-track-label track-eval">EVAL · REAL TRAJECTORIES</p>
-            <h2>From intent<br /><em>to outcome.</em></h2>
+            <h2>Task trajectories</h2>
           </div>
           <p>Three real runs: six-system coordination, connected Gmail, and multi-system root-cause analysis.</p>
         </div>
@@ -889,7 +764,17 @@ export function OccamySite({ view = "home" }: { view?: SiteView }) {
               id={`trajectory-tab-${trajectory.id}`}
               aria-selected={trajectory.id === activeTrajectory.id}
               aria-controls="trajectory-player"
+              tabIndex={trajectory.id === activeTrajectory.id ? 0 : -1}
               onClick={() => setActiveTrajectoryId(trajectory.id)}
+              onKeyDown={(event) => {
+                const nextIndex = event.key === "ArrowRight" ? (index + 1) % trajectoryDemos.length
+                  : event.key === "ArrowLeft" ? (index + trajectoryDemos.length - 1) % trajectoryDemos.length
+                  : event.key === "Home" ? 0 : event.key === "End" ? trajectoryDemos.length - 1 : -1;
+                if (nextIndex < 0) return;
+                event.preventDefault();
+                setActiveTrajectoryId(trajectoryDemos[nextIndex].id);
+                event.currentTarget.parentElement?.querySelectorAll<HTMLButtonElement>("[role=tab]")[nextIndex]?.focus();
+              }}
             >
               <span className={`trajectory-tab-status ${trajectory.tone}`}>{String(index + 1).padStart(2, "0")}</span>
               <strong>{trajectory.label}</strong>
@@ -943,8 +828,7 @@ export function OccamySite({ view = "home" }: { view?: SiteView }) {
       <section className="game-demo-section" id="game-demo">
         <div className="game-demo-head">
           <div>
-            <p className="section-index section-track-label track-eval">FINAL GENERATED ARTIFACT · PLAYABLE</p>
-            <h2>Coral Dragon<br /><em>Reef Rescue.</em></h2>
+            <h2>Coral Dragon Reef Rescue</h2>
           </div>
           <div className="game-demo-copy">
             <p>Generated from one coding prompt by Occamy.</p>
