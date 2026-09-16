@@ -124,6 +124,21 @@ Training tasks are grounded in executable environments with observable state tra
 
 ## 5. Deployment
 
+### Quantized Checkpoints and MTP
+
+Official quantized checkpoints and a separately adapted MTP draft head are available on Hugging Face:
+
+| Release | Download |
+| --- | --- |
+| GGUF (Q4_K_M / Q8_0) | [occamy-1.0-GGUF](https://huggingface.co/Accio-Lab/occamy-1.0-GGUF) |
+| FP8 | [occamy-1.0-FP8](https://huggingface.co/Accio-Lab/occamy-1.0-FP8) |
+| NVFP4 | [occamy-1.0-NVFP4](https://huggingface.co/Accio-Lab/occamy-1.0-NVFP4) |
+| Experimental MTP draft head | [occamy-1.0-MTP](https://huggingface.co/Accio-Lab/occamy-1.0-MTP) |
+
+See each model card for loading instructions, supported runtimes, and validation results. The MTP head is used with a separate base checkpoint; the validated native three-step SGLang path requires the included runtime patch. Performance after the final patch has not yet been measured.
+
+### Base Checkpoint
+
 Occamy-1.0 keeps the Qwen3.6-35B-A3B architecture, so the [upstream deployment recipe](https://huggingface.co/Qwen/Qwen3.6-35B-A3B#deployment) is the reference serving path. The examples below mirror that recipe with eight-way tensor parallelism and its full context length; adjust both to fit your hardware and confirm them against the released Occamy checkpoint configuration.
 
 ### SGLang
