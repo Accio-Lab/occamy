@@ -18,7 +18,9 @@
   <a href="https://arxiv.org/pdf/2609.11977"><img alt="Technical Report" src="https://img.shields.io/badge/%F0%9F%93%84%20Report-Occamy--1.0-B31B1B"></a>
   <a href="https://github.com/Accio-Lab/Dressage"><img alt="Dressage" src="https://img.shields.io/badge/Training-Dressage-087F6A"></a>
   <a href="LICENSE"><img alt="License" src="https://img.shields.io/badge/License-Apache%202.0-blue"></a>
-  [![Papers with Code: #2 on Claw-Eval](https://paperswithcode.co/api/v1/papers/2609.11977/leaderboard-badge.svg?eval=30384&live=1)](https://paperswithcode.co/api/v1/papers/2609.11977/leaderboard-badge-link?eval=30384)
+<a href="https://paperswithcode.co/api/v1/papers/2609.11977/leaderboard-badge-link?eval=30384">
+  <img src="https://paperswithcode.co/api/v1/papers/2609.11977/leaderboard-badge.svg?eval=30384&amp;live=1" alt="Papers with Code: #2 on Claw-Eval">
+</a>
 </div>
 
 ## 1. Model Introduction
